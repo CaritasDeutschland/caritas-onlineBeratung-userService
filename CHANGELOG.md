@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.20.1](https://github.com/CaritasDeutschland/caritas-onlineBeratung-userService/compare/v2.20.0...v2.20.1) (2022-08-17)
+
+
+### Bug Fixes
+
+* failed tests ([f2f53ac](https://github.com/CaritasDeutschland/caritas-onlineBeratung-userService/commit/f2f53ac50232ee6c3f682adf2b9bb56b52b66333))
+* use direct docker network url to prevent nginx location issues ([5cc4c73](https://github.com/CaritasDeutschland/caritas-onlineBeratung-userService/commit/5cc4c738482b9aa66ab2ccef51211ea76a872e27))
+
 ## [2.20.0](https://github.com/CaritasDeutschland/caritas-onlineBeratung-userService/compare/v2.16.0...v2.20.0) (2022-08-12)
 
 
