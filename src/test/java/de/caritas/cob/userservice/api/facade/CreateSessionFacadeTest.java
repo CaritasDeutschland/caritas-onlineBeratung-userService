@@ -19,6 +19,7 @@ import static de.caritas.cob.userservice.api.testHelper.TestConstants.USER_SESSI
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -73,6 +74,11 @@ public class CreateSessionFacadeTest {
   @Before
   public void setup() {
     setInternalState(LogService.class, "LOGGER", logger);
+  }
+
+  @Test
+  public void test_fail() {
+    fail();
   }
 
   /** Method: createUserSession */
