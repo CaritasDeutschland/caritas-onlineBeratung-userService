@@ -4,6 +4,24 @@ info:
   description: This information will be replaced by the SpringFox config information
   version: 0.0.1
 paths:
+  /users/{username}:
+    get:
+      tags:
+        - user-controller
+      summary: Checks if a given user exists, provided a username
+      operationId: userExists
+      parameters:
+        - name: username
+          in: path
+          description: username
+          required: true
+          schema:
+              type: string
+      responses:
+        200:
+          description: OK - user exists
+        404:
+          description: NOT FOUND - user does not exist
   /users/askers/new:
     post:
       tags:
@@ -833,29 +851,6 @@ paths:
           description: INTERNAL SERVER ERROR - server encountered unexpected condition
       security:
         - Bearer: [ ]
-  /users/statistics/registration:
-    get:
-      tags:
-        - user-controller
-      summary: 'Returns a list of user registration data per tenant'
-      operationId: getRegistrationStatistics
-      responses:
-        200:
-          description: successful operation
-          content:
-            'application/json':
-              schema:
-                $ref: '#/components/schemas/RegistrationStatisticsListResponseDTO'
-        204:
-          description: successful operation, but no content
-        401:
-          description: UNAUTHORIZED - no/invalid Keycloak token
-        403:
-          description: FORBIDDEN - no/invalid role/authorization or CSRF token
-        500:
-          description: INTERNAL SERVER ERROR - server encountered unexpected condition
-      security:
-        - Bearer: [ ]
   /users/mails/messages/new:
     post:
       tags:
@@ -1007,7 +1002,7 @@ paths:
       parameters:
         - name: query
           in: query
-          description: URL-encoded infix to search for in first name, last name, or email.
+          description: URL-encoded infix to search for in id, first name, last name, or email.
             A non-encoded star symbol searches for all.
           required: true
           schema:
@@ -1921,6 +1916,7 @@ components:
         preferredLanguage:
           $ref: "#/components/schemas/LanguageCode"
 
+
     SessionDataDTO:
       type: object
       properties:
@@ -1932,47 +1928,6 @@ components:
           type: string
           example: 8
           description: mandatory depending on the consulting type
-
-    RegistrationStatisticsListResponseDTO:
-      type: object
-      properties:
-        registrationStatistics:
-          type: array
-          items:
-            $ref: '#/components/schemas/RegistrationStatisticsResponseDTO'
-
-    RegistrationStatisticsResponseDTO:
-      type: object
-      required:
-        - userId
-        - registrationDate
-      properties:
-        userId:
-          type: string
-        registrationDate:
-          type: string
-          example: '2022-08-15T21:11:29'
-        age:
-          type: integer
-          example: '25'
-        gender:
-          type: string
-          example: 'FEMALE'
-        counsellingRelation:
-          type: string
-          example: 'SELF_COUNSELLING'
-        topicsInternalAttributes:
-          type: array
-          items:
-            type: string
-          example: [ 'angeho01','angeho13' ]
-        mainTopicInternalAttribute:
-          type: string
-          example: 'angeho01'
-        postalCode:
-          type: string
-          example: '99999'
-
 
     ConsultantSessionListResponseDTO:
       type: object
@@ -2335,6 +2290,11 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/SessionTopicDTO'
+        referer:
+          type: string
+          pattern: "^[a-zA-Z0-9]{1,8}$"
+          maxLength: 8
+          example: '12345678'
 
     UserChatDTO:
       type: object
@@ -2404,10 +2364,25 @@ components:
           type: string
           format: date-time
           writeOnly: true
+        createdAt:
+          type: string
+          format: time
+          example: 2023-10-23T12:05:00.000Z
+        chatAgencies:
+          type: array
+          items:
+              $ref: '#/components/schemas/AgencyDTO'
+        hintMessage:
+          type: string
+          example: "Hint"
+          maxLength: 300
 
     SessionUserDTO:
       type: object
       properties:
+        id:
+          type: string
+          example: 926b9777-4eef-443d-925a-4aa534797bd7
         username:
           type: string
           example: max94
@@ -2431,6 +2406,12 @@ components:
         lastName:
           type: string
           example: Mustermann
+        username:
+          type: string
+          example: beraterXYZ
+        displayName:
+          type: string
+          example: Berater XYZ
 
     UserSessionListResponseDTO:
       type: object
@@ -2744,6 +2725,10 @@ components:
           type: integer
           format: int64
           example: 12
+        topicIds:
+          type: array
+          items:
+            type: long
 
 
     MobileTokenDTO:
@@ -2805,6 +2790,10 @@ components:
         topic:
           type: string
           example: Wöchentliche Drogenberatung
+        agencyId:
+          type: integer
+          format: int64
+          example: 7
         startDate:
           type: string
           format: date
@@ -2819,12 +2808,23 @@ components:
         repetitive:
           type: boolean
           example: false
+        hintMessage:
+          type: string
+          example: "Hint"
+          maxLength: 300
 
     CreateChatResponseDTO:
       type: object
       required:
         - groupId
       properties:
+        createdAt:
+          type: string
+          format: time
+          example: 2019-10-23T12:05:00.000Z
+        creatorDisplayName:
+          type: string
+          example: Max M.
         groupId:
           type: string
           example: WCET6GWir78pNMyyD
@@ -2872,6 +2872,8 @@ components:
         displayName:
           type: string
         utcOffset:
+          type: string
+        userId:
           type: string
 
     E2eKeyDTO:
@@ -2930,6 +2932,11 @@ components:
         counsellingRelation:
           type: string
           example: 'SELF_COUNSELLING'
+        referer:
+          type: string
+          pattern: "^[a-zA-Z0-9]{1,8}$"
+          maxLength: 8
+          example: '12345678'
 
 
     NewRegistrationResponseDto:

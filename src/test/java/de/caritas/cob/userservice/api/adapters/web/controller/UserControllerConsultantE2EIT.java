@@ -34,6 +34,7 @@ import de.caritas.cob.userservice.api.adapters.web.dto.ConsultantSearchResultDTO
 import de.caritas.cob.userservice.api.adapters.web.dto.LanguageResponseDTO;
 import de.caritas.cob.userservice.api.admin.facade.AdminUserFacade;
 import de.caritas.cob.userservice.api.admin.service.agency.AgencyAdminService;
+import de.caritas.cob.userservice.api.admin.service.tenant.TenantService;
 import de.caritas.cob.userservice.api.config.VideoChatConfig;
 import de.caritas.cob.userservice.api.config.apiclient.AgencyServiceApiControllerFactory;
 import de.caritas.cob.userservice.api.config.apiclient.TopicServiceApiControllerFactory;
@@ -153,6 +154,8 @@ class UserControllerConsultantE2EIT {
   @MockBean private AgencyAdminService agencyAdminService;
 
   @MockBean private AdminUserFacade adminUserFacade;
+
+  @MockBean private TenantService tenantService;
 
   private User user;
   private Consultant consultant;
@@ -556,6 +559,8 @@ class UserControllerConsultantE2EIT {
             .andExpect(jsonPath("_embedded[0]._embedded.lastname", containsString(infix)))
             .andExpect(jsonPath("_embedded[*]._embedded.username", not(contains(nullValue()))))
             .andExpect(jsonPath("_embedded[*]._embedded.email", not(contains(nullValue()))))
+            .andExpect(jsonPath("_embedded[0]._embedded.isGroupchatConsultant", is(true)))
+            .andExpect(jsonPath("_embedded[1]._embedded.isGroupchatConsultant", is(true)))
             .andExpect(jsonPath("_embedded[0]._embedded.agencies", hasSize(1)))
             .andExpect(
                 jsonPath("_embedded[0]._embedded.agencies[0].id", not(contains(nullValue()))))
@@ -883,7 +888,8 @@ class UserControllerConsultantE2EIT {
         .andExpect(jsonPath("agencies[0].description", is(notNullValue())))
         .andExpect(jsonPath("agencies[0].teamAgency", is(notNullValue())))
         .andExpect(jsonPath("agencies[0].offline", is(notNullValue())))
-        .andExpect(jsonPath("agencies[0].consultingType", is(notNullValue())));
+        .andExpect(jsonPath("agencies[0].consultingType", is(notNullValue())))
+        .andExpect(jsonPath("agencies[0].topicIds", is(notNullValue())));
   }
 
   @Test

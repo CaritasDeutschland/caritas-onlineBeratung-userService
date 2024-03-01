@@ -69,12 +69,12 @@ public class NewEnquiryEmailSupplier implements EmailSupplier {
     log.info("Generating emails for new enquiry");
     List<ConsultantAgency> consultantAgencyList =
         consultantAgencyRepository.findByAgencyIdAndDeleteDateIsNull(session.getAgencyId());
-    log.info("Retrieved consultant agency list ", consultantAgencyList);
+    log.info("Retrieved consultant agency list {}", consultantAgencyList);
     if (isEmpty(consultantAgencyList)) {
       return emptyList();
     }
     AgencyDTO agency = agencyService.getAgency(session.getAgencyId());
-    log.info("Retrieved agency " + agency);
+    log.info("Retrieved agency {}", agency);
     return consultantAgencyList.stream()
         .filter(this::validConsultantAgency)
         .filter(this::shouldSendNewEnquiryNotificationForConsultant)
@@ -129,6 +129,7 @@ public class NewEnquiryEmailSupplier implements EmailSupplier {
         .template(TEMPLATE_NEW_ENQUIRY_NOTIFICATION)
         .email(consultant.getEmail())
         .language(language)
+        .dialect(consultant.getDialect())
         .templateData(templateAttributes);
   }
 }

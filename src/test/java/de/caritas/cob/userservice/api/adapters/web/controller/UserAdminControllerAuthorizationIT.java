@@ -4,11 +4,11 @@ import static de.caritas.cob.userservice.api.adapters.web.controller.UserAdminCo
 import static de.caritas.cob.userservice.api.adapters.web.controller.UserAdminControllerIT.AGENCY_CONSULTANT_PATH;
 import static de.caritas.cob.userservice.api.adapters.web.controller.UserAdminControllerIT.CONSULTANT_AGENCIES_PATH;
 import static de.caritas.cob.userservice.api.adapters.web.controller.UserAdminControllerIT.CONSULTANT_AGENCY_PATH;
+import static de.caritas.cob.userservice.api.adapters.web.controller.UserAdminControllerIT.CONSULTANT_PATH;
 import static de.caritas.cob.userservice.api.adapters.web.controller.UserAdminControllerIT.DELETE_ASKER_PATH;
 import static de.caritas.cob.userservice.api.adapters.web.controller.UserAdminControllerIT.DELETE_CONSULTANT_AGENCY_PATH;
 import static de.caritas.cob.userservice.api.adapters.web.controller.UserAdminControllerIT.DELETE_CONSULTANT_PATH;
 import static de.caritas.cob.userservice.api.adapters.web.controller.UserAdminControllerIT.FILTERED_CONSULTANTS_PATH;
-import static de.caritas.cob.userservice.api.adapters.web.controller.UserAdminControllerIT.GET_CONSULTANT_PATH;
 import static de.caritas.cob.userservice.api.adapters.web.controller.UserAdminControllerIT.PAGE_PARAM;
 import static de.caritas.cob.userservice.api.adapters.web.controller.UserAdminControllerIT.PER_PAGE_PARAM;
 import static de.caritas.cob.userservice.api.adapters.web.controller.UserAdminControllerIT.REPORT_PATH;
@@ -228,7 +228,7 @@ public class UserAdminControllerAuthorizationIT {
       getConsultant_Should_ReturnUnauthorizedAndCallNoMethods_When_noKeycloakAuthorizationIsPresent()
           throws Exception {
 
-    mvc.perform(get(GET_CONSULTANT_PATH).cookie(CSRF_COOKIE).header(CSRF_HEADER, CSRF_VALUE))
+    mvc.perform(get(CONSULTANT_PATH).cookie(CSRF_COOKIE).header(CSRF_HEADER, CSRF_VALUE))
         .andExpect(status().isUnauthorized());
 
     verifyNoMoreInteractions(consultantAdminFacade);
@@ -251,7 +251,7 @@ public class UserAdminControllerAuthorizationIT {
   public void getConsultant_Should_ReturnForbiddenAndCallNoMethods_When_noUserAdminAuthority()
       throws Exception {
 
-    mvc.perform(get(GET_CONSULTANT_PATH).cookie(CSRF_COOKIE).header(CSRF_HEADER, CSRF_VALUE))
+    mvc.perform(get(CONSULTANT_PATH).cookie(CSRF_COOKIE).header(CSRF_HEADER, CSRF_VALUE))
         .andExpect(status().isForbidden());
 
     verifyNoMoreInteractions(consultantAdminFacade);
@@ -264,7 +264,7 @@ public class UserAdminControllerAuthorizationIT {
           throws Exception {
 
     mvc.perform(
-            get(GET_CONSULTANT_PATH + "consultantId")
+            get(CONSULTANT_PATH + "consultantId")
                 .cookie(CSRF_COOKIE)
                 .header(CSRF_HEADER, CSRF_VALUE))
         .andExpect(status().isOk());
@@ -330,7 +330,7 @@ public class UserAdminControllerAuthorizationIT {
   public void
       createConsultant_Should_ReturnUnauthorizedAndCallNoMethods_When_noKeycloakAuthorizationIsPresent()
           throws Exception {
-    mvc.perform(post(GET_CONSULTANT_PATH).cookie(CSRF_COOKIE).header(CSRF_HEADER, CSRF_VALUE))
+    mvc.perform(post(CONSULTANT_PATH).cookie(CSRF_COOKIE).header(CSRF_HEADER, CSRF_VALUE))
         .andExpect(status().isUnauthorized());
 
     verifyNoMoreInteractions(consultantAdminFacade);
@@ -352,21 +352,21 @@ public class UserAdminControllerAuthorizationIT {
       })
   public void createConsultant_Should_ReturnForbiddenAndCallNoMethods_When_noUserAdminAuthority()
       throws Exception {
-    mvc.perform(post(GET_CONSULTANT_PATH).cookie(CSRF_COOKIE).header(CSRF_HEADER, CSRF_VALUE))
+    mvc.perform(post(CONSULTANT_PATH).cookie(CSRF_COOKIE).header(CSRF_HEADER, CSRF_VALUE))
         .andExpect(status().isForbidden());
 
     verifyNoMoreInteractions(consultantAdminFacade);
   }
 
   @Test
-  @WithMockUser(authorities = {AuthorityValue.USER_ADMIN})
+  @WithMockUser(authorities = {AuthorityValue.USER_ADMIN, AuthorityValue.CONSULTANT_CREATE})
   public void
       createConsultant_Should_ReturnOkAndCallConsultantAdminFilterService_When_userAdminAuthority()
           throws Exception {
     CreateConsultantDTO createConsultantDTO = easyRandom.nextObject(CreateConsultantDTO.class);
 
     mvc.perform(
-            post(GET_CONSULTANT_PATH)
+            post(CONSULTANT_PATH)
                 .cookie(CSRF_COOKIE)
                 .header(CSRF_HEADER, CSRF_VALUE)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -380,7 +380,7 @@ public class UserAdminControllerAuthorizationIT {
   public void
       updateConsultant_Should_ReturnUnauthorizedAndCallNoMethods_When_noKeycloakAuthorizationIsPresent()
           throws Exception {
-    mvc.perform(put(GET_CONSULTANT_PATH).cookie(CSRF_COOKIE).header(CSRF_HEADER, CSRF_VALUE))
+    mvc.perform(put(CONSULTANT_PATH).cookie(CSRF_COOKIE).header(CSRF_HEADER, CSRF_VALUE))
         .andExpect(status().isUnauthorized());
 
     verifyNoMoreInteractions(consultantAdminFacade);
@@ -402,7 +402,7 @@ public class UserAdminControllerAuthorizationIT {
       })
   public void updateConsultant_Should_ReturnForbiddenAndCallNoMethods_When_noUserAdminAuthority()
       throws Exception {
-    mvc.perform(put(GET_CONSULTANT_PATH).cookie(CSRF_COOKIE).header(CSRF_HEADER, CSRF_VALUE))
+    mvc.perform(put(CONSULTANT_PATH).cookie(CSRF_COOKIE).header(CSRF_HEADER, CSRF_VALUE))
         .andExpect(status().isForbidden());
 
     verifyNoMoreInteractions(consultantAdminFacade);
@@ -417,7 +417,7 @@ public class UserAdminControllerAuthorizationIT {
         easyRandom.nextObject(UpdateAdminConsultantDTO.class);
 
     mvc.perform(
-            put(GET_CONSULTANT_PATH + "consultantId")
+            put(CONSULTANT_PATH + "consultantId")
                 .cookie(CSRF_COOKIE)
                 .header(CSRF_HEADER, CSRF_VALUE)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -528,7 +528,7 @@ public class UserAdminControllerAuthorizationIT {
   }
 
   @Test
-  @WithMockUser(authorities = AuthorityValue.USER_ADMIN)
+  @WithMockUser(authorities = {AuthorityValue.USER_ADMIN, AuthorityValue.CONSULTANT_UPDATE})
   public void setConsultantAgenciesShouldReturnOkAndCallConsultantAdminFacade() throws Exception {
     var agencies = List.of(easyRandom.nextObject(CreateConsultantAgencyDTO.class));
 
@@ -708,7 +708,7 @@ public class UserAdminControllerAuthorizationIT {
                 .contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk());
 
-    verify(this.consultantAdminFacade, times(1)).markConsultantForDeletion(any());
+    verify(this.consultantAdminFacade, times(1)).markConsultantForDeletion(any(), any());
   }
 
   @Test

@@ -119,9 +119,19 @@ public class SecurityConfig extends KeycloakWebSecurityConfigurerAdapter {
         .antMatchers("/users/chat/{chatId:[0-9]+}/verify")
         .hasAnyAuthority(CONSULTANT_DEFAULT)
         .antMatchers("/users/password/change")
-        .hasAnyAuthority(USER_DEFAULT, CONSULTANT_DEFAULT, SINGLE_TENANT_ADMIN, TENANT_ADMIN)
+        .hasAnyAuthority(
+            USER_DEFAULT,
+            CONSULTANT_DEFAULT,
+            SINGLE_TENANT_ADMIN,
+            TENANT_ADMIN,
+            RESTRICTED_AGENCY_ADMIN)
         .antMatchers("/users/twoFactorAuth", "/users/2fa/**", "/users/mobile/app/token")
-        .hasAnyAuthority(SINGLE_TENANT_ADMIN, TENANT_ADMIN, USER_DEFAULT, CONSULTANT_DEFAULT)
+        .hasAnyAuthority(
+            SINGLE_TENANT_ADMIN,
+            TENANT_ADMIN,
+            USER_DEFAULT,
+            CONSULTANT_DEFAULT,
+            RESTRICTED_AGENCY_ADMIN)
         .antMatchers("/users/statistics/registration")
         .hasAnyAuthority(SINGLE_TENANT_ADMIN, TENANT_ADMIN)
         .antMatchers(
@@ -180,6 +190,13 @@ public class SecurityConfig extends KeycloakWebSecurityConfigurerAdapter {
         .hasAuthority(TENANT_ADMIN)
         .antMatchers("/useradmin/data/*")
         .hasAnyAuthority(SINGLE_TENANT_ADMIN, RESTRICTED_AGENCY_ADMIN)
+        .antMatchers(HttpMethod.POST, "/useradmin/consultants/")
+        .hasAnyAuthority(CONSULTANT_CREATE, TECHNICAL_DEFAULT)
+        .antMatchers(HttpMethod.PUT, "/useradmin/consultants/{consultantId:" + UUID_PATTERN + "}")
+        .hasAnyAuthority(CONSULTANT_UPDATE, TECHNICAL_DEFAULT)
+        .antMatchers(
+            HttpMethod.PUT, "/useradmin/consultants/{consultantId:" + UUID_PATTERN + "}/agencies")
+        .hasAnyAuthority(CONSULTANT_UPDATE, TECHNICAL_DEFAULT)
         .antMatchers("/useradmin", "/useradmin/**")
         .hasAnyAuthority(USER_ADMIN, TECHNICAL_DEFAULT)
         .antMatchers("/users/consultants/search")
@@ -190,6 +207,8 @@ public class SecurityConfig extends KeycloakWebSecurityConfigurerAdapter {
             "/users/sessions/{sessionId:[0-9]+}")
         .hasAnyAuthority(CONSULTANT_DEFAULT)
         .antMatchers("/appointments")
+        .hasAnyAuthority(CONSULTANT_DEFAULT, TECHNICAL_DEFAULT)
+        .antMatchers("/appointments/booking/{id:[0-9]+}")
         .hasAnyAuthority(CONSULTANT_DEFAULT, TECHNICAL_DEFAULT)
         .antMatchers(HttpMethod.PUT, APPOINTMENTS_APPOINTMENT_ID + UUID_PATTERN + "}")
         .hasAuthority(CONSULTANT_DEFAULT)
@@ -204,6 +223,8 @@ public class SecurityConfig extends KeycloakWebSecurityConfigurerAdapter {
         .antMatchers(HttpMethod.GET, "/actuator/health")
         .permitAll()
         .antMatchers(HttpMethod.GET, "/actuator/health/*")
+        .permitAll()
+        .mvcMatchers(HttpMethod.GET, "/users/{username}")
         .permitAll()
         .anyRequest()
         .denyAll();

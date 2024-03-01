@@ -2,6 +2,7 @@ package de.caritas.cob.userservice.api;
 
 import static java.util.Objects.isNull;
 
+import de.caritas.cob.userservice.api.admin.service.tenant.TenantService;
 import de.caritas.cob.userservice.api.exception.httpresponses.InternalServerErrorException;
 import de.caritas.cob.userservice.api.helper.UsernameTranscoder;
 import de.caritas.cob.userservice.api.model.Consultant;
@@ -14,6 +15,7 @@ import de.caritas.cob.userservice.api.port.out.MessageClient;
 import de.caritas.cob.userservice.api.port.out.SessionRepository;
 import de.caritas.cob.userservice.api.port.out.UserRepository;
 import de.caritas.cob.userservice.api.service.agency.AgencyService;
+import de.caritas.cob.userservice.api.service.appointment.AppointmentService;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -44,9 +46,15 @@ public class AccountManager implements AccountManaging {
 
   private final AgencyService agencyService;
 
+  private final TenantService tenantService;
+
   private final ConsultantAgencyRepository consultantAgencyRepository;
 
   private final SessionRepository sessionRepository;
+
+  private final AppointmentService appointmentService;
+
+  private final PatchConsultantSaga patchConsultantSaga;
 
   @Override
   public Optional<Map<String, Object>> findConsultant(String id) {
@@ -105,7 +113,18 @@ public class AccountManager implements AccountManaging {
     var agencyIds = userServiceMapper.agencyIdsOf(consultingAgencies);
     var agencies = agencyService.getAgenciesWithoutCaching(agencyIds);
 
-    return userServiceMapper.mapOf(consultantPage, fullConsultants, agencies, consultingAgencies);
+    var tenantIdsToNameMap =
+        fullConsultants.stream()
+            .filter(consultant -> consultant.getTenantId() != null)
+            .collect(
+                Collectors.toMap(
+                    Consultant::getTenantId,
+                    consultant ->
+                        tenantService.getRestrictedTenantData(consultant.getTenantId()).getName(),
+                    (existing, replacement) -> existing));
+
+    return userServiceMapper.mapOf(
+        consultantPage, fullConsultants, agencies, consultingAgencies, tenantIdsToNameMap);
   }
 
   @Override
@@ -159,15 +178,7 @@ public class AccountManager implements AccountManaging {
 
   private Map<String, Object> patchConsultant(Consultant consultant, Map<String, Object> patchMap) {
     var patchedConsultant = userServiceMapper.consultantOf(consultant, patchMap);
-    var savedConsultant = consultantRepository.save(patchedConsultant);
-
-    userServiceMapper
-        .displayNameOf(patchMap)
-        .ifPresent(
-            displayName ->
-                messageClient.updateUser(savedConsultant.getRocketChatId(), displayName));
-
-    return userServiceMapper.mapOf(savedConsultant, patchMap);
+    return patchConsultantSaga.executeTransactional(patchedConsultant, patchMap);
   }
 
   private Map<String, Object> findByDbConsultant(Consultant dbConsultant) {

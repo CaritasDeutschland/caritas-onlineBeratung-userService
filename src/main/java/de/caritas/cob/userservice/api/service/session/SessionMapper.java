@@ -77,6 +77,7 @@ public class SessionMapper {
   private SessionUserDTO convertToSessionUserDTO(Session session) {
     if (nonNull(session.getUser()) && nonNull(session.getSessionData())) {
       var sessionUserDto = new SessionUserDTO();
+      sessionUserDto.setId(session.getUser().getUserId());
       sessionUserDto.setUsername(
           new UsernameTranscoder().decodeUsername(session.getUser().getUsername()));
       sessionUserDto.setSessionData(buildSessionDataMapFromSession(session));
@@ -145,7 +146,8 @@ public class SessionMapper {
         GroupSessionConsultantDTO.builder()
             .id(sessionConsultant.getId())
             .firstName(sessionConsultant.getFirstName())
-            .lastName(sessionConsultant.getLastName());
+            .lastName(sessionConsultant.getLastName())
+            .displayName(sessionConsultant.getDisplayName());
     return response.consultant(consultant.build());
   }
 }

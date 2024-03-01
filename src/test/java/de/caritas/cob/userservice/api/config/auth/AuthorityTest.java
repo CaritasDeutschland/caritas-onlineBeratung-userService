@@ -107,7 +107,9 @@ public class AuthorityTest {
 
     assertNotNull(result);
     assertTrue(result.contains(AuthorityValue.USER_ADMIN));
-    assertEquals(1, result.size());
+    assertTrue(result.contains(AuthorityValue.CONSULTANT_CREATE));
+    assertTrue(result.contains(AuthorityValue.CONSULTANT_UPDATE));
+    assertEquals(3, result.size());
   }
 
   @Test
