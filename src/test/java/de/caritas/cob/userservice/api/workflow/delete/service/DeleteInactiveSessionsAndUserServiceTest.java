@@ -399,14 +399,13 @@ class DeleteInactiveSessionsAndUserServiceTest {
     when(userRepository.findAllByRcUserIdAndDeleteDateIsNull(user.getUserId()))
         .thenReturn(List.of(user));
     when(sessionRepository.findByUser(user))
-        .thenReturn(List.of(normalSession, feedbackChatSession));
+        .thenReturn(List.of(normalSession, feedbackChatSession, new Session()));
 
     // when
     deleteInactiveSessionsAndUserService.deleteInactiveSessionsAndUsers();
 
     // then
-    // Verify only the inactive session was passed to deletion
-    verify(deleteSessionService, never()).performSessionDeletion(feedbackChatSession);
-    verify(deleteSessionService, never()).performSessionDeletion(normalSession);
+    verify(deleteSessionService).performSessionDeletion(feedbackChatSession);
+    verify(deleteSessionService).performSessionDeletion(normalSession);
   }
 }
