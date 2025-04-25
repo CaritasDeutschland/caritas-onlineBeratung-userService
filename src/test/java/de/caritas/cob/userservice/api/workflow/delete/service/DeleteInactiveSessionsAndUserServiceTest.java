@@ -6,6 +6,7 @@ import static de.caritas.cob.userservice.api.workflow.delete.model.DeletionTarge
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -95,7 +96,7 @@ class DeleteInactiveSessionsAndUserServiceTest {
 
   @Test
   void
-      deleteInactiveSessionsAndUsers_Should_DeleteEntireUserAccount_WhenUserHasOnlyInactiveSessions() {
+  deleteInactiveSessionsAndUsers_Should_DeleteEntireUserAccount_WhenUserHasOnlyInactiveSessions() {
     // given
     EasyRandom easyRandom = new EasyRandom();
     User user = easyRandom.nextObject(User.class);
@@ -122,7 +123,7 @@ class DeleteInactiveSessionsAndUserServiceTest {
 
   @Test
   void
-      deleteInactiveSessionsAndUsers_Should_DeleteSingleSession_WhenUserHasActiveAndInactiveSessions() {
+  deleteInactiveSessionsAndUsers_Should_DeleteSingleSession_WhenUserHasActiveAndInactiveSessions() {
     // given
     EasyRandom easyRandom = new EasyRandom();
     User user = easyRandom.nextObject(User.class);
@@ -149,7 +150,7 @@ class DeleteInactiveSessionsAndUserServiceTest {
 
   @Test
   void
-      deleteInactiveSessionsAndUsers_Should_logWorkflowErrorMail_WhenUserHasActiveAndInactiveSessionsAndHasErrors() {
+  deleteInactiveSessionsAndUsers_Should_logWorkflowErrorMail_WhenUserHasActiveAndInactiveSessionsAndHasErrors() {
     // given
     EasyRandom easyRandom = new EasyRandom();
     User user = easyRandom.nextObject(User.class);
@@ -189,7 +190,7 @@ class DeleteInactiveSessionsAndUserServiceTest {
 
   @Test
   void
-      deleteInactiveSessionsAndUsers_Should_notLogError_WhenSessionCouldNotBeFound_BecauseItMayHaveBeenDeletedByPreviousWorkflowRun() {
+  deleteInactiveSessionsAndUsers_Should_notLogError_WhenSessionCouldNotBeFound_BecauseItMayHaveBeenDeletedByPreviousWorkflowRun() {
     // given
     EasyRandom easyRandom = new EasyRandom();
     User user = easyRandom.nextObject(User.class);
@@ -212,8 +213,8 @@ class DeleteInactiveSessionsAndUserServiceTest {
     deleteInactiveSessionsAndUserService.deleteInactiveSessionsAndUsers();
 
     // then
-    verify(workflowErrorLogService, Mockito.never()).logWorkflowErrors(Mockito.anyList());
-    verify(workflowErrorMailService, Mockito.never()).buildAndSendErrorMail(Mockito.anyList());
+    verify(workflowErrorLogService, never()).logWorkflowErrors(Mockito.anyList());
+    verify(workflowErrorMailService, never()).buildAndSendErrorMail(Mockito.anyList());
   }
 
   @Test
@@ -246,7 +247,7 @@ class DeleteInactiveSessionsAndUserServiceTest {
 
   @Test
   void
-      deleteInactiveSessionsAndUsers_Should_deleteSessionFromRocketChat_WhenSessionDoesNotExistOnMariaDB() {
+  deleteInactiveSessionsAndUsers_Should_deleteSessionFromRocketChat_WhenSessionDoesNotExistOnMariaDB() {
     // given
     EasyRandom easyRandom = new EasyRandom();
     User user = easyRandom.nextObject(User.class);
@@ -272,7 +273,7 @@ class DeleteInactiveSessionsAndUserServiceTest {
 
   @Test
   void
-      deleteInactiveSessionsAndUsers_Should_notPropagateExceptionWhenUnexpectedExceptionOccurred() {
+  deleteInactiveSessionsAndUsers_Should_notPropagateExceptionWhenUnexpectedExceptionOccurred() {
     // given
     Entry<String, List<String>> userInactiveGroupEntry =
         Map.entry("userId", Collections.emptyList());
@@ -324,7 +325,7 @@ class DeleteInactiveSessionsAndUserServiceTest {
 
   @Test
   void
-      deleteInactiveSessionsAndUsers_Should_ProcessFirstChunk_If_RecordsNumber_IsSmallerThanChunkSize() {
+  deleteInactiveSessionsAndUsers_Should_ProcessFirstChunk_If_RecordsNumber_IsSmallerThanChunkSize() {
     // given
     Map<String, List<String>> userWithInactiveGroupsMap = new HashMap<>();
     for (int i = 0; i < 100; i++) {
@@ -342,4 +343,72 @@ class DeleteInactiveSessionsAndUserServiceTest {
         logsList.stream()
             .anyMatch(event -> event.getFormattedMessage().contains("Processing chunk number: 1")));
   }
+
+
+  @Test
+  void deleteInactiveSessionsAndUsers_Should_DeleteOnlyInactiveSessions() {
+    // given
+    EasyRandom easyRandom = new EasyRandom();
+    User user = easyRandom.nextObject(User.class);
+    user.setUserId("test-user-id");
+
+    Session normalSession = easyRandom.nextObject(Session.class);
+    normalSession.setGroupId("normal_session");
+
+    Session feedbackChatSession = easyRandom.nextObject(Session.class);
+    feedbackChatSession.setGroupId("feedback_chat_session");
+
+    Map<String, List<String>> userWithInactiveGroupsMap = Map.of(
+        user.getUserId(), List.of(feedbackChatSession.getGroupId())
+    );
+
+    when(inactivePrivateGroupsProvider.retrieveUserWithInactiveGroupsMap())
+        .thenReturn(userWithInactiveGroupsMap);
+    when(userRepository.findAllByRcUserIdAndDeleteDateIsNull(user.getUserId()))
+        .thenReturn(List.of(user));
+    when(sessionRepository.findByUser(user))
+        .thenReturn(List.of(normalSession, feedbackChatSession));
+
+    // when
+    deleteInactiveSessionsAndUserService.deleteInactiveSessionsAndUsers();
+
+    // then
+    // Verify only the inactive session was passed to deletion
+    verify(deleteSessionService, times(1)).performSessionDeletion(feedbackChatSession);
+    verify(deleteSessionService, never()).performSessionDeletion(normalSession);
+  }
+
+  @Test
+  void deleteInactiveSessionsAndUsers_Should_DeleteAllSessionsIfAllAreInactiveSessions() {
+    // given
+    EasyRandom easyRandom = new EasyRandom();
+    User user = easyRandom.nextObject(User.class);
+    user.setUserId("test-user-id");
+
+    Session normalSession = easyRandom.nextObject(Session.class);
+    normalSession.setGroupId("normal_session");
+
+    Session feedbackChatSession = easyRandom.nextObject(Session.class);
+    feedbackChatSession.setGroupId("feedback_chat_session");
+
+    Map<String, List<String>> userWithInactiveGroupsMap = Map.of(
+        user.getUserId(), List.of(feedbackChatSession.getGroupId(), normalSession.getGroupId())
+    );
+
+    when(inactivePrivateGroupsProvider.retrieveUserWithInactiveGroupsMap())
+        .thenReturn(userWithInactiveGroupsMap);
+    when(userRepository.findAllByRcUserIdAndDeleteDateIsNull(user.getUserId()))
+        .thenReturn(List.of(user));
+    when(sessionRepository.findByUser(user))
+        .thenReturn(List.of(normalSession, feedbackChatSession));
+
+    // when
+    deleteInactiveSessionsAndUserService.deleteInactiveSessionsAndUsers();
+
+    // then
+    // Verify only the inactive session was passed to deletion
+    verify(deleteSessionService, never()).performSessionDeletion(feedbackChatSession);
+    verify(deleteSessionService, never()).performSessionDeletion(normalSession);
+  }
+
 }
