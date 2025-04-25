@@ -96,7 +96,7 @@ class DeleteInactiveSessionsAndUserServiceTest {
 
   @Test
   void
-  deleteInactiveSessionsAndUsers_Should_DeleteEntireUserAccount_WhenUserHasOnlyInactiveSessions() {
+      deleteInactiveSessionsAndUsers_Should_DeleteEntireUserAccount_WhenUserHasOnlyInactiveSessions() {
     // given
     EasyRandom easyRandom = new EasyRandom();
     User user = easyRandom.nextObject(User.class);
@@ -123,7 +123,7 @@ class DeleteInactiveSessionsAndUserServiceTest {
 
   @Test
   void
-  deleteInactiveSessionsAndUsers_Should_DeleteSingleSession_WhenUserHasActiveAndInactiveSessions() {
+      deleteInactiveSessionsAndUsers_Should_DeleteSingleSession_WhenUserHasActiveAndInactiveSessions() {
     // given
     EasyRandom easyRandom = new EasyRandom();
     User user = easyRandom.nextObject(User.class);
@@ -150,7 +150,7 @@ class DeleteInactiveSessionsAndUserServiceTest {
 
   @Test
   void
-  deleteInactiveSessionsAndUsers_Should_logWorkflowErrorMail_WhenUserHasActiveAndInactiveSessionsAndHasErrors() {
+      deleteInactiveSessionsAndUsers_Should_logWorkflowErrorMail_WhenUserHasActiveAndInactiveSessionsAndHasErrors() {
     // given
     EasyRandom easyRandom = new EasyRandom();
     User user = easyRandom.nextObject(User.class);
@@ -190,7 +190,7 @@ class DeleteInactiveSessionsAndUserServiceTest {
 
   @Test
   void
-  deleteInactiveSessionsAndUsers_Should_notLogError_WhenSessionCouldNotBeFound_BecauseItMayHaveBeenDeletedByPreviousWorkflowRun() {
+      deleteInactiveSessionsAndUsers_Should_notLogError_WhenSessionCouldNotBeFound_BecauseItMayHaveBeenDeletedByPreviousWorkflowRun() {
     // given
     EasyRandom easyRandom = new EasyRandom();
     User user = easyRandom.nextObject(User.class);
@@ -247,7 +247,7 @@ class DeleteInactiveSessionsAndUserServiceTest {
 
   @Test
   void
-  deleteInactiveSessionsAndUsers_Should_deleteSessionFromRocketChat_WhenSessionDoesNotExistOnMariaDB() {
+      deleteInactiveSessionsAndUsers_Should_deleteSessionFromRocketChat_WhenSessionDoesNotExistOnMariaDB() {
     // given
     EasyRandom easyRandom = new EasyRandom();
     User user = easyRandom.nextObject(User.class);
@@ -273,7 +273,7 @@ class DeleteInactiveSessionsAndUserServiceTest {
 
   @Test
   void
-  deleteInactiveSessionsAndUsers_Should_notPropagateExceptionWhenUnexpectedExceptionOccurred() {
+      deleteInactiveSessionsAndUsers_Should_notPropagateExceptionWhenUnexpectedExceptionOccurred() {
     // given
     Entry<String, List<String>> userInactiveGroupEntry =
         Map.entry("userId", Collections.emptyList());
@@ -325,7 +325,7 @@ class DeleteInactiveSessionsAndUserServiceTest {
 
   @Test
   void
-  deleteInactiveSessionsAndUsers_Should_ProcessFirstChunk_If_RecordsNumber_IsSmallerThanChunkSize() {
+      deleteInactiveSessionsAndUsers_Should_ProcessFirstChunk_If_RecordsNumber_IsSmallerThanChunkSize() {
     // given
     Map<String, List<String>> userWithInactiveGroupsMap = new HashMap<>();
     for (int i = 0; i < 100; i++) {
@@ -344,7 +344,6 @@ class DeleteInactiveSessionsAndUserServiceTest {
             .anyMatch(event -> event.getFormattedMessage().contains("Processing chunk number: 1")));
   }
 
-
   @Test
   void deleteInactiveSessionsAndUsers_Should_DeleteOnlyInactiveSessions() {
     // given
@@ -358,9 +357,8 @@ class DeleteInactiveSessionsAndUserServiceTest {
     Session feedbackChatSession = easyRandom.nextObject(Session.class);
     feedbackChatSession.setGroupId("feedback_chat_session");
 
-    Map<String, List<String>> userWithInactiveGroupsMap = Map.of(
-        user.getUserId(), List.of(feedbackChatSession.getGroupId())
-    );
+    Map<String, List<String>> userWithInactiveGroupsMap =
+        Map.of(user.getUserId(), List.of(feedbackChatSession.getGroupId()));
 
     when(inactivePrivateGroupsProvider.retrieveUserWithInactiveGroupsMap())
         .thenReturn(userWithInactiveGroupsMap);
@@ -391,9 +389,10 @@ class DeleteInactiveSessionsAndUserServiceTest {
     Session feedbackChatSession = easyRandom.nextObject(Session.class);
     feedbackChatSession.setGroupId("feedback_chat_session");
 
-    Map<String, List<String>> userWithInactiveGroupsMap = Map.of(
-        user.getUserId(), List.of(feedbackChatSession.getGroupId(), normalSession.getGroupId())
-    );
+    Map<String, List<String>> userWithInactiveGroupsMap =
+        Map.of(
+            user.getUserId(),
+            List.of(feedbackChatSession.getGroupId(), normalSession.getGroupId()));
 
     when(inactivePrivateGroupsProvider.retrieveUserWithInactiveGroupsMap())
         .thenReturn(userWithInactiveGroupsMap);
@@ -410,5 +409,4 @@ class DeleteInactiveSessionsAndUserServiceTest {
     verify(deleteSessionService, never()).performSessionDeletion(feedbackChatSession);
     verify(deleteSessionService, never()).performSessionDeletion(normalSession);
   }
-
 }
