@@ -605,6 +605,68 @@ public class RocketChatService implements MessageClient {
     }
   }
 
+  public void addUserToGroupIgnoreRoomsThatDoNotExist(String rcUserId, String rcGroupId)
+      throws RocketChatAddUserToGroupException {
+
+    GroupResponseDTO response;
+    try {
+      RocketChatCredentials technicalUser = rcCredentialHelper.getTechnicalUser();
+      var header = getStandardHttpHeaders(technicalUser);
+
+      if (rocketChatGroupDoesNotExist(rcGroupId, header)) {
+        return; // Fail gracefully if the group doesn't exist
+      }
+
+      var body = new GroupAddUserBodyDTO(rcUserId, rcGroupId);
+      HttpEntity<GroupAddUserBodyDTO> request = new HttpEntity<>(body, header);
+
+      var url = rocketChatConfig.getApiUrl(ENDPOINT_GROUP_INVITE);
+      response = restTemplate.postForObject(url, request, GroupResponseDTO.class);
+
+    } catch (Exception ex) {
+      log.error(
+          "Rocket.Chat Error: Could not add user {} to Rocket.Chat group with id {}. Reason: ",
+          rcUserId,
+          rcGroupId,
+          ex);
+      throw new RocketChatAddUserToGroupException(
+          String.format(
+              "Could not add user %s to Rocket.Chat group with id %s", rcUserId, rcGroupId));
+    }
+
+    if (nonNull(response) && !response.isSuccess()) {
+      var error = "Could not add user %s to Rocket.Chat group with id %s";
+      throw new RocketChatAddUserToGroupException(String.format(error, rcUserId, rcGroupId));
+    }
+  }
+
+  public boolean rocketChatGroupDoesNotExist(String rcGroupId, HttpHeaders header)
+      throws RocketChatAddUserToGroupException {
+    var groupCheckUrl = rocketChatConfig.getApiUrl("/api/v1/groups.info?roomId=" + rcGroupId);
+    ResponseEntity<GroupInfoDTO> groupCheckResponse =
+        restTemplate.exchange(
+            groupCheckUrl, HttpMethod.GET, new HttpEntity<>(header), GroupInfoDTO.class);
+
+    // Rocket.Chat returns 200 OK even if the group does not exist
+    if (groupCheckResponse.getBody() != null && !groupCheckResponse.getBody().isSuccess()) {
+
+      if ("error-room-not-found".equals(groupCheckResponse.getBody().getErrorType())) {
+        log.warn("Rocket.Chat Warning: Group with id {} does not exist.", rcGroupId);
+        return true;
+      }
+
+      log.error(
+          "Rocket.Chat Error: Could not fetch group info for id {}. Error: {}",
+          rcGroupId,
+          groupCheckResponse.getBody().getError());
+      throw new RocketChatAddUserToGroupException(
+          String.format(
+              "Could not fetch group info for id %s. Error: %s",
+              rcGroupId, groupCheckResponse.getBody().getError()));
+    }
+    return false;
+  }
+
   /**
    * Adds the technical user to the given Rocket.Chat group id.
    *

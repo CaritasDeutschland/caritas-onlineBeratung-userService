@@ -56,6 +56,7 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
+import de.caritas.cob.userservice.api.adapters.rocketchat.GroupInfoDTO;
 import de.caritas.cob.userservice.api.adapters.rocketchat.RocketChatCredentialsProvider;
 import de.caritas.cob.userservice.api.adapters.rocketchat.RocketChatService;
 import de.caritas.cob.userservice.api.adapters.rocketchat.config.RocketChatConfig;
@@ -110,6 +111,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.slf4j.Logger;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -172,6 +174,9 @@ public class RocketChatServiceTest {
   private final String PASSWORD = "password";
   private final RocketChatConfig rocketChatConfig =
       new RocketChatConfig(new MockHttpServletRequest());
+
+  private static final HttpHeaders HEADERS = new HttpHeaders();
+
   private final ObjectMapper objectMapper = new ObjectMapper();
   @Mock Logger logger;
   @Mock RocketChatCredentialsProvider rcCredentialsHelper;
@@ -1220,6 +1225,49 @@ public class RocketChatServiceTest {
     String result = this.rocketChatService.getRocketChatUserIdByUsername(USERNAME);
 
     assertThat(result, is(USERS_LIST_RESPONSE_DTO.getUsers()[0].getId()));
+  }
+
+  @Test
+  public void rocketChatGroupDoesNotExist_ShouldReturnFalse_When_GroupDoesNotExist()
+      throws RocketChatAddUserToGroupException {
+    GroupInfoDTO groupInfoDTO = new GroupInfoDTO();
+    groupInfoDTO.setSuccess(true);
+
+    when(restTemplate.exchange(anyString(), eq(HttpMethod.GET), any(), eq(GroupInfoDTO.class)))
+        .thenReturn(new ResponseEntity<>(groupInfoDTO, HttpStatus.OK));
+
+    boolean result = rocketChatService.rocketChatGroupDoesNotExist(GROUP_ID, HEADERS);
+
+    assertFalse(result);
+  }
+
+  @Test
+  public void rocketChatGroupDoesNotExist_ShouldReturnTrue_When_GroupDoesNotExist()
+      throws RocketChatAddUserToGroupException {
+    GroupInfoDTO groupInfoDTO = new GroupInfoDTO();
+    groupInfoDTO.setSuccess(false);
+    groupInfoDTO.setErrorType("error-room-not-found");
+
+    when(restTemplate.exchange(anyString(), eq(HttpMethod.GET), any(), eq(GroupInfoDTO.class)))
+        .thenReturn(new ResponseEntity<>(groupInfoDTO, HttpStatus.OK));
+
+    boolean result = rocketChatService.rocketChatGroupDoesNotExist(GROUP_ID, HEADERS);
+
+    assertTrue(result);
+  }
+
+  @Test(expected = RocketChatAddUserToGroupException.class)
+  public void rocketChatGroupDoesNotExist_WhenFetchFailsWithDifferentError_ShouldThrowException()
+      throws RocketChatAddUserToGroupException {
+    GroupInfoDTO groupInfoDTO = new GroupInfoDTO();
+    groupInfoDTO.setSuccess(false);
+    groupInfoDTO.setErrorType("unexpected-error");
+    groupInfoDTO.setError("Unexpected error occurred.");
+
+    when(restTemplate.exchange(anyString(), eq(HttpMethod.GET), any(), eq(GroupInfoDTO.class)))
+        .thenReturn(new ResponseEntity<>(groupInfoDTO, HttpStatus.OK));
+
+    rocketChatService.rocketChatGroupDoesNotExist(GROUP_ID, HEADERS);
   }
 
   private void givenMongoResponseWith(Document doc, Document... docs) {
