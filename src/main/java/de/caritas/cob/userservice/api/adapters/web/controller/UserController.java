@@ -509,7 +509,11 @@ public class UserController implements UsersApi {
       partialUserData = askerDataProvider.retrieveData(user);
 
       // Log the user information for debugging purposes
-      log.info("Userinfo: Name: {}, ID: {}, IP: {}", user.getUsername(), user.getUserId(), getClientIp());
+      log.info(
+          "Userinfo: Name: {}, ID: {}, IP: {}",
+          user.getUsername(),
+          user.getUserId(),
+          getClientIp());
     }
     var otpInfoDTO =
         identityClientConfig.isOtpAllowed(authenticatedUser.getRoles())
@@ -535,7 +539,8 @@ public class UserController implements UsersApi {
   }
 
   private String getClientIp() {
-    ServletRequestAttributes attrs = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+    ServletRequestAttributes attrs =
+        (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
     if (attrs != null) {
       HttpServletRequest request = attrs.getRequest();
       String xForwardedFor = request.getHeader("X-Forwarded-For");
