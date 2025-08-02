@@ -112,6 +112,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.InternalServerErrorException;
@@ -125,6 +126,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 /** Controller for user api requests */
 @Slf4j
@@ -504,6 +507,9 @@ public class UserController implements UsersApi {
     } else {
       var user = userAccountProvider.retrieveValidatedUser();
       partialUserData = askerDataProvider.retrieveData(user);
+
+      // Log the user information for debugging purposes
+      log.info("Userinfo: Name: {}, ID: {}, IP: {}", user.getUsername(), user.getUserId(), getClientIp());
     }
     var otpInfoDTO =
         identityClientConfig.isOtpAllowed(authenticatedUser.getRoles())
@@ -526,6 +532,19 @@ public class UserController implements UsersApi {
 
   private boolean isTenantAdmin() {
     return authenticatedUser.isSingleTenantAdmin() || authenticatedUser.isTenantSuperAdmin();
+  }
+
+  private String getClientIp() {
+    ServletRequestAttributes attrs = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+    if (attrs != null) {
+      HttpServletRequest request = attrs.getRequest();
+      String xForwardedFor = request.getHeader("X-Forwarded-For");
+      if (xForwardedFor != null && !xForwardedFor.isEmpty()) {
+        return xForwardedFor.split(",")[0].trim();
+      }
+      return request.getRemoteAddr();
+    }
+    return null;
   }
 
   @Override
