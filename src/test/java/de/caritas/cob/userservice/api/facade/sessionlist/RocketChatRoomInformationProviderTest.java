@@ -149,8 +149,7 @@ public class RocketChatRoomInformationProviderTest {
   }
 
   @Test
-  public void
-      should_mark_consultant_display_name_changed_room_as_read_regardless_of_subscription_unread_count() {
+  public void should_mark_consultant_display_name_changed_room_as_read_when_only_alias_is_unread() {
     var alias =
         new de.caritas.cob.userservice.api.adapters.web.dto.AliasMessageDTO()
             .messageType(
@@ -271,5 +270,71 @@ public class RocketChatRoomInformationProviderTest {
     var fallbackDate =
         rocketChatRoomInformation.getGroupIdToLastMessageFallbackDate().get("displayNameRoom2");
     assertEquals(lastSeenDate, fallbackDate);
+  }
+
+  @Test
+  public void
+      should_not_mark_as_read_and_not_override_sort_date_when_real_unread_messages_exist_alongside_display_name_changed() {
+    var alias =
+        new de.caritas.cob.userservice.api.adapters.web.dto.AliasMessageDTO()
+            .messageType(
+                de.caritas.cob.userservice.api.adapters.web.dto.MessageType
+                    .CONSULTANT_DISPLAY_NAME_CHANGED);
+    var lastMessage =
+        new de.caritas.cob.userservice.api.adapters.rocketchat.dto.room.RoomsLastMessageDTO();
+    lastMessage.setAlias(alias);
+    lastMessage.setTimestamp(new Date());
+    var roomWithAlias =
+        new RoomsUpdateDTO(
+            "roomWithRealUnread",
+            "room",
+            "fname",
+            "p",
+            USER_DTO_3,
+            false,
+            false,
+            new Date(),
+            lastMessage,
+            new Date());
+
+    // unread = 3: the alias + 2 real messages that the user hasn't read yet
+    var subscriptionWithMultipleUnread =
+        new de.caritas.cob.userservice.api.adapters.rocketchat.dto.subscriptions
+            .SubscriptionsUpdateDTO(
+            "D",
+            true,
+            true,
+            3,
+            0,
+            0,
+            new Date(),
+            "roomWithRealUnread",
+            "name",
+            "fname",
+            "p",
+            null,
+            new Date(1655730882738L),
+            new Date(),
+            null,
+            null);
+
+    var rooms = new ArrayList<>(ROOMS_UPDATE_DTO_LIST);
+    rooms.add(roomWithAlias);
+    when(rocketChatService.getRoomsOfUser(RC_CREDENTIALS)).thenReturn(rooms);
+
+    var subscriptions = new ArrayList<>(SUBSCRIPTIONS_UPDATE_LIST_DTO_WITH_ONE_FEEDBACK_UNREAD);
+    subscriptions.add(subscriptionWithMultipleUnread);
+    when(rocketChatService.getSubscriptionsOfUser(RC_CREDENTIALS)).thenReturn(subscriptions);
+
+    RocketChatRoomInformation rocketChatRoomInformation =
+        rocketChatRoomInformationProvider.retrieveRocketChatInformation(RC_CREDENTIALS);
+
+    // room has real unread messages → must stay unread
+    assertFalse(rocketChatRoomInformation.getReadMessages().get("roomWithRealUnread"));
+    // sort date must NOT be overridden → alias timestamp drives sort position
+    assertFalse(
+        rocketChatRoomInformation
+            .getGroupIdToLastMessageFallbackDate()
+            .containsKey("roomWithRealUnread"));
   }
 }

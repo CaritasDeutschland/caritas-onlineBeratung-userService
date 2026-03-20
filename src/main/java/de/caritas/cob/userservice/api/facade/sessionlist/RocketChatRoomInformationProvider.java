@@ -52,11 +52,16 @@ public class RocketChatRoomInformationProvider {
 
       var displayNameChangedRoomIds = collectDisplayNameChangedRoomIds(roomsForUpdate);
       if (!displayNameChangedRoomIds.isEmpty()) {
-        readMessages =
-            overrideReadStatusForDisplayNameChangedRooms(readMessages, displayNameChangedRoomIds);
-        displayNameChangedFallbackDates =
-            collectLastSeenDatesForDisplayNameChangedRooms(
-                subscriptions, displayNameChangedRoomIds);
+        // Only treat rooms as "silent" when the alias is the sole unread item (unread <= 1).
+        // If real unread messages exist (unread > 1) those sessions must stay unread and
+        // keep their actual sort position.
+        var silentRoomIds =
+            filterSilentDisplayNameChangedRooms(subscriptions, displayNameChangedRoomIds);
+        if (!silentRoomIds.isEmpty()) {
+          readMessages = overrideReadStatusForDisplayNameChangedRooms(readMessages, silentRoomIds);
+          displayNameChangedFallbackDates =
+              collectLastSeenDatesForDisplayNameChangedRooms(subscriptions, silentRoomIds);
+        }
       }
     }
 
@@ -92,6 +97,27 @@ public class RocketChatRoomInformationProvider {
     return rooms.stream()
         .filter(room -> isConsultantDisplayNameChangedAlias(room.getLastMessage()))
         .map(RoomsUpdateDTO::getId)
+        .collect(Collectors.toSet());
+  }
+
+  /**
+   * Filters the given {@code CONSULTANT_DISPLAY_NAME_CHANGED} room IDs to only those where the
+   * alias is the sole reason for the unread count ({@code unread <= 1}). Rooms with genuinely
+   * unread messages ({@code unread > 1}) are excluded so they keep their unread indicator and sort
+   * position.
+   */
+  private Set<String> filterSilentDisplayNameChangedRooms(
+      List<SubscriptionsUpdateDTO> subscriptions, Set<String> displayNameChangedRoomIds) {
+    var unreadByRoom =
+        subscriptions.stream()
+            .filter(sub -> displayNameChangedRoomIds.contains(sub.getRoomId()))
+            .collect(
+                Collectors.toMap(
+                    SubscriptionsUpdateDTO::getRoomId,
+                    sub -> nonNull(sub.getUnread()) ? sub.getUnread() : 0));
+
+    return displayNameChangedRoomIds.stream()
+        .filter(roomId -> unreadByRoom.getOrDefault(roomId, 0) <= 1)
         .collect(Collectors.toSet());
   }
 

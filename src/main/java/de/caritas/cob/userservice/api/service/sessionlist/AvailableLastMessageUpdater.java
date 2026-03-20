@@ -121,11 +121,23 @@ public class AvailableLastMessageUpdater {
       RocketChatRoomInformation rocketChatRoomInformation,
       String groupId,
       RoomsLastMessageDTO roomsLastMessage) {
-    if (isNull(roomsLastMessage) || isConsultantDisplayNameChangedAlias(roomsLastMessage)) {
+    if (isNull(roomsLastMessage)) {
       var fallbackDate =
           rocketChatRoomInformation.getGroupIdToLastMessageFallbackDate().get(groupId);
       setFallbackDate(latestMessageDate, session, fallbackDate);
       return;
+    }
+
+    if (isConsultantDisplayNameChangedAlias(roomsLastMessage)) {
+      var fallbackDate =
+          rocketChatRoomInformation.getGroupIdToLastMessageFallbackDate().get(groupId);
+      if (nonNull(fallbackDate)) {
+        // alias is the only unread item → use ls-timestamp to keep session at original position
+        setFallbackDate(latestMessageDate, session, fallbackDate);
+        return;
+      }
+      // unread > 1: real messages exist → fall through to use the alias timestamp so the
+      // session stays at the top where the user can see the unread indicator
     }
 
     var lastMessageDate =

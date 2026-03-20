@@ -130,6 +130,26 @@ public class AvailableLastMessageUpdaterTest {
 
   @Test
   public void
+      updateSessionWithAvailableLastMessage_Should_useAliasTimestamp_When_lastMessageIsConsultantDisplayNameChangedAliasButRealUnreadMessagesExist() {
+    // no fallback date in map → unread > 1, real messages exist
+    var aliasTimestamp = new Date(1655730882738L);
+    when(roomsLastMessageDTO.getAlias())
+        .thenReturn(new AliasMessageDTO().messageType(MessageType.CONSULTANT_DISPLAY_NAME_CHANGED));
+    when(roomsLastMessageDTO.getTimestamp()).thenReturn(aliasTimestamp);
+    when(rocketChatRoomInformation.getGroupIdToLastMessageFallbackDate())
+        .thenReturn(Collections.emptyMap());
+    when(rocketChatRoomInformation.getRoomsForUpdate()).thenReturn(Collections.emptyList());
+    AtomicReference<Date> capturedDate = new AtomicReference<>();
+
+    this.availableLastMessageUpdater.updateSessionWithAvailableLastMessage(
+        session, capturedDate::set, this.rocketChatRoomInformation, "");
+
+    // must use the alias timestamp, NOT fall back to EPOCH
+    assertThat(capturedDate.get(), is(aliasTimestamp));
+  }
+
+  @Test
+  public void
       updateSessionWithAvailableLastMessage_Should_setLastMessageTypeToDisplayNameChanged_When_lastMessageIsConsultantDisplayNameChangedAlias() {
     when(roomsLastMessageDTO.getAlias())
         .thenReturn(new AliasMessageDTO().messageType(MessageType.CONSULTANT_DISPLAY_NAME_CHANGED));

@@ -515,6 +515,40 @@ class UserControllerSessionE2EIT {
 
   @Test
   @WithMockUser(authorities = AuthorityValue.CONSULTANT_DEFAULT)
+  void
+      getSessionsForAuthenticatedConsultantShouldKeepSessionUnreadWhenRealUnreadMessagesExistAlongsideDisplayNameChanged()
+          throws Exception {
+    givenAValidUser();
+    givenAValidConsultant(true);
+    givenASessionInProgress();
+    givenAValidRocketChatGetRoomsResponse(
+        session.getGroupId(), MessageType.CONSULTANT_DISPLAY_NAME_CHANGED, null);
+    // unread=3: the alias + 2 real messages the consultant hasn't read yet
+    givenARocketChatSubscriptionWithUnreadCountForGroup(session.getGroupId(), 3);
+
+    mockMvc
+        .perform(
+            get("/users/sessions/consultants")
+                .queryParam("status", "2")
+                .queryParam("count", "15")
+                .queryParam("filter", "all")
+                .queryParam("offset", "0")
+                .cookie(CSRF_COOKIE)
+                .header(CSRF_HEADER, CSRF_VALUE)
+                .header(RC_TOKEN_HEADER_PARAMETER_NAME, RC_TOKEN)
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("total", is(1)))
+        .andExpect(jsonPath("sessions", hasSize(1)))
+        .andExpect(
+            jsonPath("sessions[0].session.lastMessageType", is("CONSULTANT_DISPLAY_NAME_CHANGED")))
+        // real unread messages exist → session must remain unread
+        .andExpect(jsonPath("sessions[0].session.messagesRead", is(false)))
+        .andExpect(jsonPath("sessions[0].chat", is(nullValue())));
+  }
+
+  @Test
+  @WithMockUser(authorities = AuthorityValue.CONSULTANT_DEFAULT)
   void getSessionsForAuthenticatedConsultantShouldNotReturnTeamSessions() throws Exception {
     givenAValidUser();
     givenAValidConsultant(true);
@@ -1299,6 +1333,10 @@ class UserControllerSessionE2EIT {
    * timestamp set to 1 minute in the past.
    */
   private void givenARocketChatSubscriptionWithUnreadForGroup(String groupId) {
+    givenARocketChatSubscriptionWithUnreadCountForGroup(groupId, 1);
+  }
+
+  private void givenARocketChatSubscriptionWithUnreadCountForGroup(String groupId, int unread) {
     var lastSeenTimestamp =
         new java.util.Date(System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(1));
     var subscription =
@@ -1306,7 +1344,7 @@ class UserControllerSessionE2EIT {
             "sub-" + groupId,
             true,
             true,
-            1,
+            unread,
             0,
             0,
             new java.util.Date(),
