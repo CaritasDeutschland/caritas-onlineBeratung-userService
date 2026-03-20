@@ -147,4 +147,129 @@ public class RocketChatRoomInformationProviderTest {
     assertNotNull(rocketChatRoomInformation.getGroupIdToLastMessageFallbackDate());
     assertTrue(rocketChatRoomInformation.getGroupIdToLastMessageFallbackDate().isEmpty());
   }
+
+  @Test
+  public void
+      should_mark_consultant_display_name_changed_room_as_read_regardless_of_subscription_unread_count() {
+    var alias =
+        new de.caritas.cob.userservice.api.adapters.web.dto.AliasMessageDTO()
+            .messageType(
+                de.caritas.cob.userservice.api.adapters.web.dto.MessageType
+                    .CONSULTANT_DISPLAY_NAME_CHANGED);
+    var lastMessage =
+        new de.caritas.cob.userservice.api.adapters.rocketchat.dto.room.RoomsLastMessageDTO();
+    lastMessage.setAlias(alias);
+    lastMessage.setTimestamp(new Date());
+    var roomWithAlias =
+        new RoomsUpdateDTO(
+            "displayNameRoom",
+            "room with display name alias",
+            "fname",
+            "p",
+            USER_DTO_3,
+            false,
+            false,
+            new Date(),
+            lastMessage,
+            new Date());
+
+    // Subscription shows 1 unread (the alias itself)
+    var subscriptionWithUnread =
+        new de.caritas.cob.userservice.api.adapters.rocketchat.dto.subscriptions
+            .SubscriptionsUpdateDTO(
+            "B",
+            true,
+            true,
+            1,
+            0,
+            0,
+            new Date(),
+            "displayNameRoom",
+            "name",
+            "fname",
+            "p",
+            null,
+            new Date(1655730882738L),
+            new Date(),
+            null,
+            null);
+
+    var rooms = new ArrayList<>(ROOMS_UPDATE_DTO_LIST);
+    rooms.add(roomWithAlias);
+    when(rocketChatService.getRoomsOfUser(RC_CREDENTIALS)).thenReturn(rooms);
+
+    var subscriptions = new ArrayList<>(SUBSCRIPTIONS_UPDATE_LIST_DTO_WITH_ONE_FEEDBACK_UNREAD);
+    subscriptions.add(subscriptionWithUnread);
+    when(rocketChatService.getSubscriptionsOfUser(RC_CREDENTIALS)).thenReturn(subscriptions);
+
+    RocketChatRoomInformation rocketChatRoomInformation =
+        rocketChatRoomInformationProvider.retrieveRocketChatInformation(RC_CREDENTIALS);
+
+    // Despite unread == 1 in subscription, the room must be considered read
+    assertTrue(rocketChatRoomInformation.getReadMessages().get("displayNameRoom"));
+  }
+
+  @Test
+  public void
+      should_use_last_seen_timestamp_as_fallback_sort_date_for_consultant_display_name_changed_room() {
+    var lastSeenDate = new Date(1655730882738L);
+    var alias =
+        new de.caritas.cob.userservice.api.adapters.web.dto.AliasMessageDTO()
+            .messageType(
+                de.caritas.cob.userservice.api.adapters.web.dto.MessageType
+                    .CONSULTANT_DISPLAY_NAME_CHANGED);
+    var lastMessage =
+        new de.caritas.cob.userservice.api.adapters.rocketchat.dto.room.RoomsLastMessageDTO();
+    lastMessage.setAlias(alias);
+    lastMessage.setTimestamp(new Date());
+    var roomWithAlias =
+        new RoomsUpdateDTO(
+            "displayNameRoom2",
+            "room",
+            "fname",
+            "p",
+            USER_DTO_3,
+            false,
+            false,
+            new Date(),
+            lastMessage,
+            new Date());
+
+    var subscriptionWithLastSeen =
+        new de.caritas.cob.userservice.api.adapters.rocketchat.dto.subscriptions
+            .SubscriptionsUpdateDTO(
+            "C",
+            true,
+            false,
+            0,
+            0,
+            0,
+            new Date(),
+            "displayNameRoom2",
+            "name",
+            "fname",
+            "p",
+            null,
+            lastSeenDate,
+            new Date(),
+            null,
+            null);
+
+    var rooms = new ArrayList<>(ROOMS_UPDATE_DTO_LIST);
+    rooms.add(roomWithAlias);
+    when(rocketChatService.getRoomsOfUser(RC_CREDENTIALS)).thenReturn(rooms);
+
+    var subscriptions = new ArrayList<>(SUBSCRIPTIONS_UPDATE_LIST_DTO_WITH_ONE_FEEDBACK_UNREAD);
+    subscriptions.add(subscriptionWithLastSeen);
+    when(rocketChatService.getSubscriptionsOfUser(RC_CREDENTIALS)).thenReturn(subscriptions);
+
+    RocketChatRoomInformation rocketChatRoomInformation =
+        rocketChatRoomInformationProvider.retrieveRocketChatInformation(RC_CREDENTIALS);
+
+    // The lastSeen timestamp is used as fallback sort date to prevent the alias from
+    // pushing the session to the top of the list
+    var fallbackDate =
+        rocketChatRoomInformation.getGroupIdToLastMessageFallbackDate().get("displayNameRoom2");
+    assertEquals(lastSeenDate, fallbackDate);
+  }
 }

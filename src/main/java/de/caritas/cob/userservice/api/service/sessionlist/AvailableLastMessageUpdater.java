@@ -1,5 +1,6 @@
 package de.caritas.cob.userservice.api.service.sessionlist;
 
+import static de.caritas.cob.userservice.api.adapters.web.dto.MessageType.CONSULTANT_DISPLAY_NAME_CHANGED;
 import static de.caritas.cob.userservice.api.adapters.web.dto.MessageType.FURTHER_STEPS;
 import static de.caritas.cob.userservice.api.helper.CustomLocalDateTime.toDate;
 import static de.caritas.cob.userservice.api.model.Session.RegistrationType.ANONYMOUS;
@@ -107,13 +108,20 @@ public class AvailableLastMessageUpdater {
         && FURTHER_STEPS.name().equals(roomsLastMessageDTO.getAlias().getMessageType().name());
   }
 
+  private boolean isConsultantDisplayNameChangedAlias(RoomsLastMessageDTO roomsLastMessageDTO) {
+    var alias = roomsLastMessageDTO.getAlias();
+    return nonNull(alias)
+        && nonNull(alias.getMessageType())
+        && CONSULTANT_DISPLAY_NAME_CHANGED.name().equals(alias.getMessageType().name());
+  }
+
   private void setLatestMessageDateOrFallback(
       SessionDTO session,
       Consumer<Date> latestMessageDate,
       RocketChatRoomInformation rocketChatRoomInformation,
       String groupId,
       RoomsLastMessageDTO roomsLastMessage) {
-    if (isNull(roomsLastMessage)) {
+    if (isNull(roomsLastMessage) || isConsultantDisplayNameChangedAlias(roomsLastMessage)) {
       var fallbackDate =
           rocketChatRoomInformation.getGroupIdToLastMessageFallbackDate().get(groupId);
       setFallbackDate(latestMessageDate, session, fallbackDate);

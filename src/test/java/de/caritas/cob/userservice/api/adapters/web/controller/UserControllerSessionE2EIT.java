@@ -478,6 +478,43 @@ class UserControllerSessionE2EIT {
 
   @Test
   @WithMockUser(authorities = AuthorityValue.CONSULTANT_DEFAULT)
+  void
+      getSessionsForAuthenticatedConsultantShouldMarkConsultantDisplayNameChangedAsReadAndExposeLastMessageType()
+          throws Exception {
+    givenAValidUser();
+    givenAValidConsultant(true);
+    givenASessionInProgress();
+    givenAValidRocketChatGetRoomsResponse(
+        session.getGroupId(), MessageType.CONSULTANT_DISPLAY_NAME_CHANGED, null);
+    // Subscription deliberately has unread=1 – the alias message should NOT cause an unread badge
+    givenARocketChatSubscriptionWithUnreadForGroup(session.getGroupId());
+
+    mockMvc
+        .perform(
+            get("/users/sessions/consultants")
+                .queryParam("status", "2")
+                .queryParam("count", "15")
+                .queryParam("filter", "all")
+                .queryParam("offset", "0")
+                .cookie(CSRF_COOKIE)
+                .header(CSRF_HEADER, CSRF_VALUE)
+                .header(RC_TOKEN_HEADER_PARAMETER_NAME, RC_TOKEN)
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("total", is(1)))
+        .andExpect(jsonPath("sessions", hasSize(1)))
+        // lastMessageType is still exposed so the frontend can react to the name change
+        .andExpect(
+            jsonPath("sessions[0].session.lastMessageType", is("CONSULTANT_DISPLAY_NAME_CHANGED")))
+        // the alias message has no text
+        .andExpect(jsonPath("sessions[0].session.lastMessage", is(emptyString())))
+        // despite unread=1 in the RC subscription, the alias must be treated as read
+        .andExpect(jsonPath("sessions[0].session.messagesRead", is(true)))
+        .andExpect(jsonPath("sessions[0].chat", is(nullValue())));
+  }
+
+  @Test
+  @WithMockUser(authorities = AuthorityValue.CONSULTANT_DEFAULT)
   void getSessionsForAuthenticatedConsultantShouldNotReturnTeamSessions() throws Exception {
     givenAValidUser();
     givenAValidConsultant(true);
@@ -587,6 +624,45 @@ class UserControllerSessionE2EIT {
             jsonPath(
                 "sessions[*].session.lastMessageType",
                 containsInAnyOrder("REASSIGN_CONSULTANT", "FURTHER_STEPS")))
+        .andExpect(jsonPath("sessions[0].chat", is(nullValue())))
+        .andExpect(jsonPath("sessions[1].chat", is(nullValue())));
+  }
+
+  @Test
+  @WithMockUser(authorities = AuthorityValue.USER_DEFAULT)
+  void
+      getSessionsForAuthenticatedUserShouldMarkConsultantDisplayNameChangedAsReadAndExposeLastMessageType()
+          throws Exception {
+    givenAValidUser(true);
+    givenAValidConsultant();
+    givenASessionInProgress();
+    givenAValidRocketChatSystemUser();
+    givenAValidRocketChatGetRoomsResponse(
+        session.getGroupId(), MessageType.CONSULTANT_DISPLAY_NAME_CHANGED, null);
+    // Subscription deliberately has unread=1 – the alias message should NOT cause an unread badge
+    givenARocketChatSubscriptionWithUnreadForGroup(session.getGroupId());
+    user.getSessions().forEach(s -> givenAValidRocketChatInfoUserResponse(s.getConsultant()));
+
+    mockMvc
+        .perform(
+            get("/users/sessions/askers")
+                .cookie(CSRF_COOKIE)
+                .header(CSRF_HEADER, CSRF_VALUE)
+                .header(RC_TOKEN_HEADER_PARAMETER_NAME, RC_TOKEN)
+                .accept(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("sessions", hasSize(2)))
+        .andExpect(
+            jsonPath(
+                "sessions[*].session.lastMessageType",
+                containsInAnyOrder("CONSULTANT_DISPLAY_NAME_CHANGED", "FURTHER_STEPS")))
+        // despite unread=1 in RC subscription, the CONSULTANT_DISPLAY_NAME_CHANGED session
+        // must be treated as read
+        .andExpect(
+            jsonPath(
+                "sessions[?(@.session.lastMessageType == 'CONSULTANT_DISPLAY_NAME_CHANGED')]"
+                    + ".session.messagesRead",
+                containsInAnyOrder(true)))
         .andExpect(jsonPath("sessions[0].chat", is(nullValue())))
         .andExpect(jsonPath("sessions[1].chat", is(nullValue())));
   }
@@ -1215,6 +1291,43 @@ class UserControllerSessionE2EIT {
             endsWith(urlSuffix), eq(HttpMethod.GET),
             any(HttpEntity.class), eq(SubscriptionsGetDTO.class)))
         .thenReturn(ResponseEntity.ok(subscriptionsGetResponse));
+  }
+
+  /**
+   * Mocks a Rocket.Chat subscription response where the given room has {@code unread=1} (as would
+   * happen after a CONSULTANT_DISPLAY_NAME_CHANGED alias was posted) and a {@code lastSeen}
+   * timestamp set to 1 minute in the past.
+   */
+  private void givenARocketChatSubscriptionWithUnreadForGroup(String groupId) {
+    var lastSeenTimestamp =
+        new java.util.Date(System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(1));
+    var subscription =
+        new SubscriptionsUpdateDTO(
+            "sub-" + groupId,
+            true,
+            true,
+            1,
+            0,
+            0,
+            new java.util.Date(),
+            groupId,
+            "room-name",
+            "room-fname",
+            "p",
+            null,
+            lastSeenTimestamp,
+            new java.util.Date(),
+            null,
+            null);
+    var response = new SubscriptionsGetDTO();
+    response.setSuccess(true);
+    response.setUpdate(new SubscriptionsUpdateDTO[] {subscription});
+
+    var urlSuffix = "/api/v1/subscriptions.get";
+    when(restTemplate.exchange(
+            endsWith(urlSuffix), eq(HttpMethod.GET),
+            any(HttpEntity.class), eq(SubscriptionsGetDTO.class)))
+        .thenReturn(ResponseEntity.ok(response));
   }
 
   private void givenAValidConsultant() {

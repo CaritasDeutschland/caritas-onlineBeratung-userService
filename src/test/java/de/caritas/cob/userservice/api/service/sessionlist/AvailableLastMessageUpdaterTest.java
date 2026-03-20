@@ -113,6 +113,36 @@ public class AvailableLastMessageUpdaterTest {
   }
 
   @Test
+  public void
+      updateSessionWithAvailableLastMessage_Should_useFallbackDate_When_lastMessageIsConsultantDisplayNameChangedAlias() {
+    var fallbackDate = new Date(1655730882738L);
+    when(roomsLastMessageDTO.getAlias())
+        .thenReturn(new AliasMessageDTO().messageType(MessageType.CONSULTANT_DISPLAY_NAME_CHANGED));
+    when(rocketChatRoomInformation.getGroupIdToLastMessageFallbackDate())
+        .thenReturn(Map.of(GROUP_ID, fallbackDate));
+    AtomicReference<Date> capturedDate = new AtomicReference<>();
+
+    this.availableLastMessageUpdater.updateSessionWithAvailableLastMessage(
+        session, capturedDate::set, this.rocketChatRoomInformation, "");
+
+    assertThat(capturedDate.get(), is(fallbackDate));
+  }
+
+  @Test
+  public void
+      updateSessionWithAvailableLastMessage_Should_setLastMessageTypeToDisplayNameChanged_When_lastMessageIsConsultantDisplayNameChangedAlias() {
+    when(roomsLastMessageDTO.getAlias())
+        .thenReturn(new AliasMessageDTO().messageType(MessageType.CONSULTANT_DISPLAY_NAME_CHANGED));
+    when(rocketChatRoomInformation.getGroupIdToLastMessageFallbackDate())
+        .thenReturn(Collections.emptyMap());
+
+    this.availableLastMessageUpdater.updateSessionWithAvailableLastMessage(
+        session, mock(Consumer.class), this.rocketChatRoomInformation, "");
+
+    assertThat(session.getLastMessageType(), is(MessageType.CONSULTANT_DISPLAY_NAME_CHANGED));
+  }
+
+  @Test
   public void updateSessionWithAvailableLastMessage_should_set_rocket_chat_type() {
     givenAnE2eRoomsLastMessage();
     when(sessionListAnalyser.prepareMessageForSessionList("e2e_encrypted_message", GROUP_ID))
