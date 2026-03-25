@@ -2,7 +2,6 @@ package de.caritas.cob.userservice.api;
 
 import static java.util.Objects.isNull;
 
-import de.caritas.cob.userservice.api.actions.session.AsyncAliasMessageCommandExecutor;
 import de.caritas.cob.userservice.api.exception.httpresponses.InternalServerErrorException;
 import de.caritas.cob.userservice.api.helper.UsernameTranscoder;
 import de.caritas.cob.userservice.api.model.Consultant;
@@ -15,7 +14,6 @@ import de.caritas.cob.userservice.api.port.out.MessageClient;
 import de.caritas.cob.userservice.api.port.out.SessionRepository;
 import de.caritas.cob.userservice.api.port.out.UserRepository;
 import de.caritas.cob.userservice.api.service.agency.AgencyService;
-import de.caritas.cob.userservice.api.tenant.TenantContext;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -49,8 +47,6 @@ public class AccountManager implements AccountManaging {
   private final ConsultantAgencyRepository consultantAgencyRepository;
 
   private final SessionRepository sessionRepository;
-
-  private final AsyncAliasMessageCommandExecutor asyncAliasMessageCommandExecutor;
 
   @Override
   public Optional<Map<String, Object>> findConsultant(String id) {
@@ -168,14 +164,8 @@ public class AccountManager implements AccountManaging {
     userServiceMapper
         .displayNameOf(patchMap)
         .ifPresent(
-            displayName -> {
-              var updated =
-                  messageClient.updateUser(savedConsultant.getRocketChatId(), displayName);
-              if (updated) {
-                asyncAliasMessageCommandExecutor.executeDisplayNameChanged(
-                    savedConsultant, TenantContext.getCurrentTenant());
-              }
-            });
+            displayName ->
+                messageClient.updateUser(savedConsultant.getRocketChatId(), displayName));
 
     return userServiceMapper.mapOf(savedConsultant, patchMap);
   }
