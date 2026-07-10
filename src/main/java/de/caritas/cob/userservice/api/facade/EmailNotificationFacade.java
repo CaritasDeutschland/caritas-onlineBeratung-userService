@@ -154,6 +154,7 @@ public class EmailNotificationFacade {
               .consultantAgencyService(consultantAgencyService)
               .consultingTypeManager(consultingTypeManager)
               .consultantService(consultantService)
+              .rocketChatService(messageClient)
               .applicationBaseUrl(applicationBaseUrl)
               .emailDummySuffix(identityClientConfig.getEmailDummySuffix())
               .tenantTemplateSupplier(tenantTemplateSupplier)
