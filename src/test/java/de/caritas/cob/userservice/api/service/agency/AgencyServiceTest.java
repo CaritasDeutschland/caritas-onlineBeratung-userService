@@ -90,13 +90,17 @@ class AgencyServiceTest {
   }
 
   @Test
-  void deleteAgencyRegistrationUrl_Should_callApi() {
+  void setAgencyRegistrationUrl_Should_callApiWithNullUrl_When_removing() {
     when(securityHeaderSupplier.getCsrfHttpHeaders()).thenReturn(new HttpHeaders());
     when(this.agencyControllerApi.getApiClient()).thenReturn(apiClient);
     when(agencyServiceApiControllerFactory.createControllerApi()).thenReturn(agencyControllerApi);
 
-    this.agencyService.deleteAgencyRegistrationUrl(98L);
+    this.agencyService.setAgencyRegistrationUrl(98L, null, "consultant-uuid");
 
-    verify(agencyControllerApi).deleteAgencyRegistrationUrl(98L);
+    var captor = org.mockito.ArgumentCaptor.forClass(RegistrationUrlDTO.class);
+    verify(agencyControllerApi)
+        .setAgencyRegistrationUrl(org.mockito.ArgumentMatchers.eq(98L), captor.capture());
+    assertThat(captor.getValue().getRegistrationUrl()).isNull();
+    assertThat(captor.getValue().getAddedBy()).isEqualTo("consultant-uuid");
   }
 }

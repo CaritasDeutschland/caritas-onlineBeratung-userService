@@ -1,8 +1,5 @@
 package de.caritas.cob.userservice.api.service.consultant;
 
-import static de.caritas.cob.userservice.api.helper.CustomLocalDateTime.nowInUtc;
-import static java.util.Objects.nonNull;
-
 import de.caritas.cob.userservice.api.exception.httpresponses.BadRequestException;
 import de.caritas.cob.userservice.api.exception.httpresponses.ForbiddenException;
 import de.caritas.cob.userservice.api.exception.httpresponses.NotFoundException;
@@ -12,14 +9,16 @@ import de.caritas.cob.userservice.api.service.ConsultantService;
 import de.caritas.cob.userservice.api.service.agency.AgencyService;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 /**
- * CARITAS-976: Handles the optional registration redirect URLs of a consultant (personal, direct
- * link) and of the agencies the consultant is assigned to (shared agency link). The agency URL is
- * persisted in the agencyService; the membership check is performed here because the
- * consultant-agency relation only exists in the userService.
+ * CARITAS-976: Handles the optional shared registration redirect URL of the agencies a consultant
+ * is assigned to. The URL is persisted in the agencyService; the membership check is performed here
+ * because the consultant-agency relation only exists in the userService.
+ *
+ * <p>The consultant's own personal registration redirect URL is handled through {@code PATCH
+ * /users/data} (see {@code UserServiceMapper#consultantOf}) and is therefore not part of this
+ * service.
  */
 @Service
 @RequiredArgsConstructor
@@ -31,47 +30,6 @@ public class RegistrationUrlService {
   private final @NonNull AuthenticatedUser authenticatedUser;
   private final @NonNull ConsultantService consultantService;
   private final @NonNull AgencyService agencyService;
-
-  @Value("${app.base.url}")
-  private String appBaseUrl;
-
-  /**
-   * Sets/updates the personal registration redirect URL of the currently authenticated consultant.
-   * A {@code null}/blank URL removes the override.
-   */
-  public void setConsultantRegistrationUrl(String registrationUrl) {
-    var consultant = getAuthenticatedConsultant();
-    if (isBlank(registrationUrl)) {
-      clearConsultantRegistrationUrl(consultant);
-      return;
-    }
-    validateRegistrationUrl(registrationUrl);
-    consultant.setRegistrationUrl(registrationUrl.trim());
-    consultant.setRegistrationUrlAddedDate(nowInUtc());
-    consultant.setUpdateDate(nowInUtc());
-    consultantService.saveConsultant(consultant);
-  }
-
-  /** Removes the personal registration redirect URL of the currently authenticated consultant. */
-  public void deleteConsultantRegistrationUrl() {
-    clearConsultantRegistrationUrl(getAuthenticatedConsultant());
-  }
-
-  /**
-   * Resolves the target of the public registration redirect for a consultant: the override URL if
-   * set, otherwise the default personal registration deep link.
-   */
-  public String resolveConsultantRedirectTarget(String consultantId) {
-    var consultant =
-        consultantService
-            .getConsultant(consultantId)
-            .orElseThrow(
-                () -> new NotFoundException("Consultant with id %s not found", consultantId));
-    if (nonNull(consultant.getRegistrationUrl()) && !consultant.getRegistrationUrl().isBlank()) {
-      return consultant.getRegistrationUrl();
-    }
-    return appBaseUrl + "/registration?cid=" + consultantId;
-  }
 
   /**
    * Sets/updates the shared registration redirect URL of an agency the authenticated consultant is
@@ -89,19 +47,13 @@ public class RegistrationUrlService {
 
   /**
    * Removes the shared registration redirect URL of an agency the authenticated consultant is
-   * assigned to.
+   * assigned to. The removal is forwarded as an empty URL so the agencyService keeps recording who
+   * removed it and when (CARITAS-976).
    */
   public void deleteAgencyRegistrationUrl(Long agencyId) {
     var consultant = getAuthenticatedConsultant();
     verifyAgencyMembership(consultant, agencyId);
-    agencyService.deleteAgencyRegistrationUrl(agencyId);
-  }
-
-  private void clearConsultantRegistrationUrl(Consultant consultant) {
-    consultant.setRegistrationUrl(null);
-    consultant.setRegistrationUrlAddedDate(null);
-    consultant.setUpdateDate(nowInUtc());
-    consultantService.saveConsultant(consultant);
+    agencyService.setAgencyRegistrationUrl(agencyId, null, consultant.getId());
   }
 
   private Consultant getAuthenticatedConsultant() {

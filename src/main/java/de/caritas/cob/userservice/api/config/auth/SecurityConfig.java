@@ -89,13 +89,7 @@ public class SecurityConfig extends KeycloakWebSecurityConfigurerAdapter {
             "/users/consultants/{consultantId:" + UUID_PATTERN + "}",
             "/users/consultants/languages")
         .permitAll()
-        .antMatchers(
-            HttpMethod.GET,
-            "/users/consultants/{consultantId:" + UUID_PATTERN + "}/registration-redirect")
-        .permitAll()
-        .antMatchers(
-            "/users/consultants/registration-url",
-            "/users/consultants/agencies/{agencyId:[0-9]+}/registration-url")
+        .antMatchers("/users/consultants/agencies/{agencyId:[0-9]+}/registration-url")
         .hasAuthority(CONSULTANT_DEFAULT)
         .antMatchers(HttpMethod.GET, "/conversations/anonymous/{sessionId:[0-9]+}")
         .hasAnyAuthority(ANONYMOUS_DEFAULT)

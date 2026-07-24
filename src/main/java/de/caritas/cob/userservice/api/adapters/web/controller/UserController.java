@@ -106,7 +106,6 @@ import de.caritas.cob.userservice.api.workflow.delete.action.asker.DeleteSingleR
 import de.caritas.cob.userservice.api.workflow.delete.model.SessionDeletionWorkflowDTO;
 import de.caritas.cob.userservice.generated.api.adapters.web.controller.UsersApi;
 import io.swagger.annotations.Api;
-import java.net.URI;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
@@ -577,33 +576,6 @@ public class UserController implements UsersApi {
     consultantUpdateService.updateConsultant(consultantId, updateAdminConsultantDTO);
 
     return new ResponseEntity<>(HttpStatus.OK);
-  }
-
-  /** CARITAS-976: Sets/updates the personal registration redirect URL of the current consultant. */
-  @Override
-  public ResponseEntity<Void> setConsultantRegistrationUrl(RegistrationUrlDTO registrationUrlDTO) {
-    registrationUrlService.setConsultantRegistrationUrl(registrationUrlDTO.getRegistrationUrl());
-
-    return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-  }
-
-  /** CARITAS-976: Removes the personal registration redirect URL of the current consultant. */
-  @Override
-  public ResponseEntity<Void> deleteConsultantRegistrationUrl() {
-    registrationUrlService.deleteConsultantRegistrationUrl();
-
-    return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-  }
-
-  /**
-   * CARITAS-976: Issues a 301 redirect to the consultant's personal registration URL (override if
-   * set, otherwise the default registration deep link).
-   */
-  @Override
-  public ResponseEntity<Void> redirectConsultantRegistration(String consultantId) {
-    var target = registrationUrlService.resolveConsultantRedirectTarget(consultantId);
-
-    return ResponseEntity.status(HttpStatus.MOVED_PERMANENTLY).location(URI.create(target)).build();
   }
 
   /**
