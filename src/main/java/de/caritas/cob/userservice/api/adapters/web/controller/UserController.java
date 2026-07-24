@@ -579,8 +579,8 @@ public class UserController implements UsersApi {
   }
 
   /**
-   * CARITAS-976: Sets/updates the shared registration redirect URL of an agency the current
-   * consultant is assigned to.
+   * Sets/updates the shared registration redirect URL of an agency the current consultant is
+   * assigned to.
    */
   @Override
   public ResponseEntity<Void> setConsultantAgencyRegistrationUrl(
@@ -592,8 +592,8 @@ public class UserController implements UsersApi {
   }
 
   /**
-   * CARITAS-976: Removes the shared registration redirect URL of an agency the current consultant
-   * is assigned to.
+   * Removes the shared registration redirect URL of an agency the current consultant is assigned
+   * to.
    */
   @Override
   public ResponseEntity<Void> deleteConsultantAgencyRegistrationUrl(Long agencyId) {

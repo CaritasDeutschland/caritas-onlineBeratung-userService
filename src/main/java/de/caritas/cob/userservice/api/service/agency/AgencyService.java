@@ -135,9 +135,8 @@ public class AgencyService {
   }
 
   /**
-   * CARITAS-976: Sets, updates or removes (null/blank url) the shared registration redirect URL of
-   * an agency in the agencyService. Caller must have verified the requesting consultant's agency
-   * membership.
+   * Sets, updates or removes (null/blank url) the shared registration redirect URL of an agency in
+   * the agencyService. Caller must have verified the requesting consultant's agency membership.
    *
    * <p>The agency cache is fully evicted so the updated URL becomes immediately visible in {@code
    * GET /users/data} for every consultant of the agency (the cache is keyed by agency id and by id

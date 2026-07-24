@@ -130,7 +130,7 @@ public class UserDtoMapper {
     if (nonNull(patchUserDTO.getEmailNotifications())) {
       map.put("emailNotifications", patchUserDTO.getEmailNotifications());
     }
-    // CARITAS-976: an empty string is a valid value here (removes the override), so it must be
+    // an empty string is a valid value here (removes the override), so it must be
     // forwarded; only a missing/null property means "leave unchanged".
     if (nonNull(patchUserDTO.getRegistrationUrl())) {
       map.put("registrationUrl", patchUserDTO.getRegistrationUrl());

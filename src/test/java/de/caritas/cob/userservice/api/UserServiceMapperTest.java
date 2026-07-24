@@ -62,8 +62,6 @@ class UserServiceMapperTest {
             "{\"initialEnquiryNotificationEnabled\":false,\"newChatMessageNotificationEnabled\":true,\"reassignmentNotificationEnabled\":true,\"appointmentNotificationEnabled\":true}");
   }
 
-  // CARITAS-976
-
   private static final String VALID_URL = "https://caritas-onlineberatung.de/registration/max";
 
   @Test
@@ -98,7 +96,7 @@ class UserServiceMapperTest {
 
     userServiceMapper.consultantOf(consultant, requestData);
 
-    // CARITAS-976: url is cleared but the added-date is updated to the removal date, not nulled
+    // url is cleared but the added-date is updated to the removal date, not nulled
     assertThat(consultant.getRegistrationUrl()).isNull();
     assertThat(consultant.getRegistrationUrlAddedDate()).isNotNull();
     assertThat(consultant.getRegistrationUrlAddedDate())

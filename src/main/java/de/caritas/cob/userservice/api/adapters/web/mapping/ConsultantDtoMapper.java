@@ -51,7 +51,7 @@ public class ConsultantDtoMapper implements DtoMapperUtils {
         new ConsultantResponseDTO()
             .consultantId(consultant.getId())
             .agencies(agencyDtoList)
-            // CARITAS-976: expose the personal redirect override so the public registration page
+            // expose the personal redirect override so the public registration page
             // can redirect visitors of the deep link.
             .registrationUrl(consultant.getRegistrationUrl());
 

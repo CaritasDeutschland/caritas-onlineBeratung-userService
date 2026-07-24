@@ -468,7 +468,7 @@ paths:
     put:
       tags:
         - user-controller
-      summary: 'CARITAS-976 Sets/updates the shared registration redirect URL of an agency the
+      summary: 'Sets/updates the shared registration redirect URL of an agency the
         authenticated consultant is assigned to. [Authorization: Role: consultant]'
       operationId: setConsultantAgencyRegistrationUrl
       parameters:
@@ -501,7 +501,7 @@ paths:
     delete:
       tags:
         - user-controller
-      summary: 'CARITAS-976 Removes the shared registration redirect URL of an agency the
+      summary: 'Removes the shared registration redirect URL of an agency the
         authenticated consultant is assigned to. [Authorization: Role: consultant]'
       operationId: deleteConsultantAgencyRegistrationUrl
       parameters:
@@ -2657,7 +2657,7 @@ components:
           $ref: "#/components/schemas/EmailNotificationsDTO"
         registrationUrl:
           type: string
-          description: "Consultant's personal registration redirect URL (CARITAS-976), or null if none set"
+          description: "Consultant's personal registration redirect URL, or null if none set"
 
     PatchUserDTO:
       type: object
@@ -2690,7 +2690,7 @@ components:
         registrationUrl:
           type: string
           maxLength: 500
-          description: "CARITAS-976 The consultant's personal registration redirect URL. Must
+          description: "The consultant's personal registration redirect URL. Must
             contain the domain caritas-onlineberatung.de. An empty string removes the override
             (keeping the added-date as the removal date). Omit the property to leave it unchanged."
           example: "https://caritas-onlineberatung.de/registration/max"
@@ -2787,7 +2787,7 @@ components:
           example: 12
         registrationUrl:
           type: string
-          description: "Agency's shared registration redirect URL (CARITAS-976), or null if none set"
+          description: "Agency's shared registration redirect URL, or null if none set"
 
 
     RegistrationUrlDTO:
@@ -2831,7 +2831,7 @@ components:
           type: string
         registrationUrl:
           type: string
-          description: "CARITAS-976 The consultant's personal registration redirect URL, or null
+          description: "The consultant's personal registration redirect URL, or null
             if none is set. Used by the registration page to redirect visitors of the deep link."
         agencies:
           type: array

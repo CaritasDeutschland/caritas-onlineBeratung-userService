@@ -12,9 +12,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 /**
- * CARITAS-976: Handles the optional shared registration redirect URL of the agencies a consultant
- * is assigned to. The URL is persisted in the agencyService; the membership check is performed here
- * because the consultant-agency relation only exists in the userService.
+ * Handles the optional shared registration redirect URL of the agencies a consultant is assigned
+ * to. The URL is persisted in the agencyService; the membership check is performed here because the
+ * consultant-agency relation only exists in the userService.
  *
  * <p>The consultant's own personal registration redirect URL is handled through {@code PATCH
  * /users/data} (see {@code UserServiceMapper#consultantOf}) and is therefore not part of this
@@ -48,7 +48,7 @@ public class RegistrationUrlService {
   /**
    * Removes the shared registration redirect URL of an agency the authenticated consultant is
    * assigned to. The removal is forwarded as an empty URL so the agencyService keeps recording who
-   * removed it and when (CARITAS-976).
+   * removed it and when.
    */
   public void deleteAgencyRegistrationUrl(Long agencyId) {
     var consultant = getAuthenticatedConsultant();

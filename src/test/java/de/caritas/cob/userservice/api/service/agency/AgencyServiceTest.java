@@ -70,8 +70,6 @@ class AgencyServiceTest {
     TenantContext.clear();
   }
 
-  // CARITAS-976
-
   @Test
   void setAgencyRegistrationUrl_Should_callApiWithUrlAndAddedBy() {
     when(securityHeaderSupplier.getCsrfHttpHeaders()).thenReturn(new HttpHeaders());

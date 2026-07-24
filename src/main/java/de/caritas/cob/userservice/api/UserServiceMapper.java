@@ -386,15 +386,15 @@ public class UserServiceMapper {
     return consultant;
   }
 
-  /** CARITAS-976: only URLs containing this domain may be used as a registration redirect. */
+  /** only URLs containing this domain may be used as a registration redirect. */
   private static final String ALLOWED_REGISTRATION_DOMAIN = "caritas-onlineberatung.de";
 
   /**
-   * CARITAS-976: Applies the consultant's personal registration redirect URL from a PATCH
-   * /users/data request. A blank value removes the override but - so it stays visible that a URL
-   * was once set and later removed - the {@code registration_url_added_date} is updated to the
-   * removal date instead of being nulled. Setting or removing only touches the added-date when the
-   * value actually changes, so re-saving the profile without changing the link is a no-op.
+   * Applies the consultant's personal registration redirect URL from a PATCH /users/data request. A
+   * blank value removes the override but - so it stays visible that a URL was once set and later
+   * removed - the {@code registration_url_added_date} is updated to the removal date instead of
+   * being nulled. Setting or removing only touches the added-date when the value actually changes,
+   * so re-saving the profile without changing the link is a no-op.
    */
   private void applyRegistrationUrl(Consultant consultant, String newUrl) {
     var trimmed = isNull(newUrl) ? null : newUrl.trim();

@@ -2168,7 +2168,7 @@ class UserControllerE2EIT {
 
     patchUserDTO.setEmailNotifications(activeEmailNotifications());
 
-    // CARITAS-976: easyRandom fills registrationUrl with a random string that would fail the
+    // easyRandom fills registrationUrl with a random string that would fail the
     // domain validation; these tests don't exercise the redirect url, so clear it.
     patchUserDTO.setRegistrationUrl(null);
   }

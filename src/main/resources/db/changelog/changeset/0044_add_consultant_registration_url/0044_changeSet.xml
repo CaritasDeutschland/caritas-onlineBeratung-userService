@@ -2,7 +2,7 @@
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.6.xsd">
-  <changeSet author="CARITAS-976" id="CARITAS-976-consultant-registration-url">
+  <changeSet author="leandro.silva" id="0044-consultant-registration-url">
     <sqlFile
       path="db/changelog/changeset/0044_add_consultant_registration_url/add-consultant-registration-url.sql"
       stripComments="true"/>

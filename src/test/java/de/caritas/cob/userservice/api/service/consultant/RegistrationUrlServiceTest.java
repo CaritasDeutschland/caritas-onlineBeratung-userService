@@ -21,7 +21,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
-/** CARITAS-976 unit tests for the agency part of {@link RegistrationUrlService}. */
+/** unit tests for the agency part of {@link RegistrationUrlService}. */
 @RunWith(MockitoJUnitRunner.class)
 public class RegistrationUrlServiceTest {
 

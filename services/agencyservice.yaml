@@ -134,7 +134,7 @@ paths:
     put:
       tags:
         - agency-controller
-      summary: 'CARITAS-976 Sets, updates or removes (null/blank url) the shared registration
+      summary: 'Sets, updates or removes (null/blank url) the shared registration
         redirect URL of an agency.'
       operationId: setAgencyRegistrationUrl
       parameters:
