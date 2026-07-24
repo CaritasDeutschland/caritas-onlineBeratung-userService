@@ -84,4 +84,7 @@ public class UserDataResponseDTO {
   private Boolean available;
 
   private EmailNotificationsDTO emailNotifications;
+
+  /** CARITAS-976: personal registration redirect override of the consultant. */
+  private String registrationUrl;
 }

@@ -130,9 +130,67 @@ paths:
           description: FORBIDDEN - no/invalid CSRF token
         500:
           description: INTERNAL SERVER ERROR - server encountered unexpected condition
+  /agencies/{agencyId}/registration-url:
+    put:
+      tags:
+        - agency-controller
+      summary: 'CARITAS-976 Sets/updates the shared registration redirect URL of an agency.'
+      operationId: setAgencyRegistrationUrl
+      parameters:
+        - name: agencyId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            example: 20
+      requestBody:
+        required: true
+        content:
+          'application/json':
+            schema:
+              $ref: '#/components/schemas/RegistrationUrlDTO'
+      responses:
+        204:
+          description: NO CONTENT - successfully updated
+        400:
+          description: BAD REQUEST - invalid url
+        404:
+          description: NOT FOUND - agency does not exist
+        500:
+          description: INTERNAL SERVER ERROR - server encountered unexpected condition
+    delete:
+      tags:
+        - agency-controller
+      summary: 'CARITAS-976 Removes the shared registration redirect URL of an agency.'
+      operationId: deleteAgencyRegistrationUrl
+      parameters:
+        - name: agencyId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            example: 20
+      responses:
+        204:
+          description: NO CONTENT - successfully removed
+        404:
+          description: NOT FOUND - agency does not exist
+        500:
+          description: INTERNAL SERVER ERROR - server encountered unexpected condition
 
 components:
   schemas:
+    RegistrationUrlDTO:
+      type: object
+      properties:
+        registrationUrl:
+          type: string
+          maxLength: 500
+        addedBy:
+          type: string
+          maxLength: 36
     AgencyResponseDTO:
       type: object
       properties:
@@ -165,6 +223,8 @@ components:
           type: integer
           format: int64
           example: 12
+        registrationUrl:
+          type: string
 
     FullAgencyResponseDTO:
       type: object

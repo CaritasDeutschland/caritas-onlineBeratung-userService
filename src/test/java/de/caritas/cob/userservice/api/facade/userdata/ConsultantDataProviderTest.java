@@ -110,6 +110,17 @@ public class ConsultantDataProviderTest {
   }
 
   @Test
+  public void retrieveData_Should_surfaceConsultantRegistrationUrl() {
+    Consultant consultant = new EasyRandom().nextObject(Consultant.class);
+    consultant.setRegistrationUrl("https://caritas-onlineberatung.de/registration/max");
+    when(agencyService.getAgencies(any())).thenReturn(List.of(AGENCY_DTO_SUCHT));
+
+    var result = underTest.retrieveData(consultant);
+
+    assertEquals("https://caritas-onlineberatung.de/registration/max", result.getRegistrationUrl());
+  }
+
+  @Test
   public void
       retrieveData_Should_returnDataWithAnonymousConversationsTrue_When_consultantHasAtLeastOneConsultingTypeWithAnonymousConversationsAllowed() {
     Consultant consultant = new EasyRandom().nextObject(Consultant.class);

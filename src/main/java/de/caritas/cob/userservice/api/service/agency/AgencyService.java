@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.caritas.cob.userservice.agencyserivce.generated.ApiClient;
 import de.caritas.cob.userservice.agencyserivce.generated.web.AgencyControllerApi;
 import de.caritas.cob.userservice.agencyserivce.generated.web.model.AgencyResponseDTO;
+import de.caritas.cob.userservice.agencyserivce.generated.web.model.RegistrationUrlDTO;
 import de.caritas.cob.userservice.api.adapters.web.dto.AgencyDTO;
 import de.caritas.cob.userservice.api.config.CacheManagerConfig;
 import de.caritas.cob.userservice.api.config.apiclient.AgencyServiceApiControllerFactory;
@@ -130,5 +131,31 @@ public class AgencyService {
    */
   public List<AgencyDTO> getAgenciesWithoutCaching(List<Long> agencyIds) {
     return getAgenciesFromAgencyService(agencyIds);
+  }
+
+  /**
+   * CARITAS-976: Sets/updates the shared registration redirect URL of an agency in the
+   * agencyService. Caller must have verified the requesting consultant's agency membership.
+   *
+   * @param agencyId the agency to update
+   * @param registrationUrl the new URL (null/blank removes the override)
+   * @param addedBy the consultant id (UUID) that set the URL
+   */
+  public void setAgencyRegistrationUrl(Long agencyId, String registrationUrl, String addedBy) {
+    var agencyControllerApi = getAgencyControllerApi();
+    addDefaultHeaders(agencyControllerApi.getApiClient());
+    agencyControllerApi.setAgencyRegistrationUrl(
+        agencyId, new RegistrationUrlDTO().registrationUrl(registrationUrl).addedBy(addedBy));
+  }
+
+  /**
+   * CARITAS-976: Removes the shared registration redirect URL of an agency in the agencyService.
+   *
+   * @param agencyId the agency to update
+   */
+  public void deleteAgencyRegistrationUrl(Long agencyId) {
+    var agencyControllerApi = getAgencyControllerApi();
+    addDefaultHeaders(agencyControllerApi.getApiClient());
+    agencyControllerApi.deleteAgencyRegistrationUrl(agencyId);
   }
 }
