@@ -471,6 +471,8 @@ public class TestConstants {
           null,
           null,
           false,
+          null,
+          null,
           null);
   public static final Consultant CONSULTANT_2 =
       new Consultant(
@@ -504,6 +506,8 @@ public class TestConstants {
           null,
           null,
           false,
+          null,
+          null,
           null);
   public static final Consultant MAIN_CONSULTANT =
       new Consultant(
@@ -537,6 +541,8 @@ public class TestConstants {
           null,
           null,
           false,
+          null,
+          null,
           null);
 
   public static final Consultant MAIN_CONSULTANT_WITH_NEW_EMAIL_NOTIFICATIONS =
@@ -571,7 +577,9 @@ public class TestConstants {
           null,
           null,
           true,
-          "{'initialEnquiryNotificationEnabled': 'true','newChatMessageNotificationEnabled': 'true', 'reassignmentNotificationEnabled': 'true','appointmentNotificationEnabled': 'true'}");
+          "{'initialEnquiryNotificationEnabled': 'true','newChatMessageNotificationEnabled': 'true', 'reassignmentNotificationEnabled': 'true','appointmentNotificationEnabled': 'true'}",
+          null,
+          null);
 
   public static final SessionConsultantForUserDTO CONSULTANT_DTO =
       new SessionConsultantForUserDTO();
@@ -794,6 +802,8 @@ public class TestConstants {
           null,
           null,
           false,
+          null,
+          null,
           null);
   public static final Consultant CONSULTANT_WITH_AGENCY_2 =
       new Consultant(
@@ -827,6 +837,8 @@ public class TestConstants {
           null,
           null,
           false,
+          null,
+          null,
           null);
   /** UserAgency */
   public static final UserAgency USER_AGENCY = new UserAgency(USER, AGENCY_ID);

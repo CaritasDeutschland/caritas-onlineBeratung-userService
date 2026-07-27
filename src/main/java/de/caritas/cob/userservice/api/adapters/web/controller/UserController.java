@@ -40,6 +40,7 @@ import de.caritas.cob.userservice.api.adapters.web.dto.PasswordDTO;
 import de.caritas.cob.userservice.api.adapters.web.dto.PatchUserDTO;
 import de.caritas.cob.userservice.api.adapters.web.dto.ReassignmentNotificationDTO;
 import de.caritas.cob.userservice.api.adapters.web.dto.RegistrationStatisticsListResponseDTO;
+import de.caritas.cob.userservice.api.adapters.web.dto.RegistrationUrlDTO;
 import de.caritas.cob.userservice.api.adapters.web.dto.RocketChatGroupIdDTO;
 import de.caritas.cob.userservice.api.adapters.web.dto.SessionDataDTO;
 import de.caritas.cob.userservice.api.adapters.web.dto.UpdateChatResponseDTO;
@@ -96,6 +97,7 @@ import de.caritas.cob.userservice.api.service.DecryptionService;
 import de.caritas.cob.userservice.api.service.LogService;
 import de.caritas.cob.userservice.api.service.SessionDataService;
 import de.caritas.cob.userservice.api.service.archive.SessionArchiveService;
+import de.caritas.cob.userservice.api.service.consultant.RegistrationUrlService;
 import de.caritas.cob.userservice.api.service.session.SessionFilter;
 import de.caritas.cob.userservice.api.service.session.SessionService;
 import de.caritas.cob.userservice.api.service.user.ValidatedUserAccountProvider;
@@ -167,6 +169,7 @@ public class UserController implements UsersApi {
   private final @NonNull UserDtoMapper userDtoMapper;
   private final @NonNull ConsultantService consultantService;
   private final @NonNull ConsultantUpdateService consultantUpdateService;
+  private final @NonNull RegistrationUrlService registrationUrlService;
   private final @NonNull ConsultantDataProvider consultantDataProvider;
   private final @NonNull AskerDataProvider askerDataProvider;
   private final @NonNull VideoChatConfig videoChatConfig;
@@ -573,6 +576,30 @@ public class UserController implements UsersApi {
     consultantUpdateService.updateConsultant(consultantId, updateAdminConsultantDTO);
 
     return new ResponseEntity<>(HttpStatus.OK);
+  }
+
+  /**
+   * Sets/updates the shared registration redirect URL of an agency the current consultant is
+   * assigned to.
+   */
+  @Override
+  public ResponseEntity<Void> setConsultantAgencyRegistrationUrl(
+      Long agencyId, RegistrationUrlDTO registrationUrlDTO) {
+    registrationUrlService.setAgencyRegistrationUrl(
+        agencyId, registrationUrlDTO.getRegistrationUrl());
+
+    return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+  }
+
+  /**
+   * Removes the shared registration redirect URL of an agency the current consultant is assigned
+   * to.
+   */
+  @Override
+  public ResponseEntity<Void> deleteConsultantAgencyRegistrationUrl(Long agencyId) {
+    registrationUrlService.deleteAgencyRegistrationUrl(agencyId);
+
+    return new ResponseEntity<>(HttpStatus.NO_CONTENT);
   }
 
   @Override
