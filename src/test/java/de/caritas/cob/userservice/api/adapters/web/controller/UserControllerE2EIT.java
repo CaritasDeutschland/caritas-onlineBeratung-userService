@@ -2167,6 +2167,10 @@ class UserControllerE2EIT {
     patchUserDTO.setEmailToggles(Set.of(dailyEnquiries, newChat, newFeedback));
 
     patchUserDTO.setEmailNotifications(activeEmailNotifications());
+
+    // easyRandom fills registrationUrl with a random string that would fail the
+    // domain validation; these tests don't exercise the redirect url, so clear it.
+    patchUserDTO.setRegistrationUrl(null);
   }
 
   private EmailNotificationsDTO activeEmailNotifications() {

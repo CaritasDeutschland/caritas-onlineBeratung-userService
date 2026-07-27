@@ -82,6 +82,7 @@ public class ConsultantDataProvider {
             hasAtLeastOneTypeWithAllowedAnonymousConversations(agencyDTOsOf(consultant)))
         .hasArchive(hasArchive(consultant))
         .emailNotifications(emailNotificationMapper.toEmailNotificationsDTO(consultant))
+        .registrationUrl(consultant.getRegistrationUrl())
         .build();
   }
 
