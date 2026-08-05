@@ -9,8 +9,8 @@ import com.neovisionaries.i18n.LanguageCode;
 import de.caritas.cob.userservice.api.adapters.web.dto.AgencyDTO;
 import de.caritas.cob.userservice.api.adapters.web.dto.EmailNotificationsDTO;
 import de.caritas.cob.userservice.api.adapters.web.dto.NotificationsSettingsDTO;
-import de.caritas.cob.userservice.api.exception.httpresponses.BadRequestException;
 import de.caritas.cob.userservice.api.helper.CustomLocalDateTime;
+import de.caritas.cob.userservice.api.helper.RegistrationUrlValidator;
 import de.caritas.cob.userservice.api.helper.UsernameTranscoder;
 import de.caritas.cob.userservice.api.helper.json.JsonSerializationUtils;
 import de.caritas.cob.userservice.api.model.Admin;
@@ -386,9 +386,6 @@ public class UserServiceMapper {
     return consultant;
   }
 
-  /** only URLs containing this domain may be used as a registration redirect. */
-  private static final String ALLOWED_REGISTRATION_DOMAIN = "caritas-onlineberatung.de";
-
   /**
    * Applies the consultant's personal registration redirect URL from a PATCH /users/data request. A
    * blank value removes the override but - so it stays visible that a URL was once set and later
@@ -408,11 +405,7 @@ public class UserServiceMapper {
       return;
     }
 
-    if (!trimmed.toLowerCase().contains(ALLOWED_REGISTRATION_DOMAIN)) {
-      throw new BadRequestException(
-          String.format(
-              "Registration url must contain the domain %s", ALLOWED_REGISTRATION_DOMAIN));
-    }
+    RegistrationUrlValidator.validate(trimmed);
 
     if (!trimmed.equals(current)) {
       consultant.setRegistrationUrl(trimmed);
