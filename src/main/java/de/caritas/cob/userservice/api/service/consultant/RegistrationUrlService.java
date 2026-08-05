@@ -1,9 +1,9 @@
 package de.caritas.cob.userservice.api.service.consultant;
 
-import de.caritas.cob.userservice.api.exception.httpresponses.BadRequestException;
 import de.caritas.cob.userservice.api.exception.httpresponses.ForbiddenException;
 import de.caritas.cob.userservice.api.exception.httpresponses.NotFoundException;
 import de.caritas.cob.userservice.api.helper.AuthenticatedUser;
+import de.caritas.cob.userservice.api.helper.RegistrationUrlValidator;
 import de.caritas.cob.userservice.api.model.Consultant;
 import de.caritas.cob.userservice.api.service.ConsultantService;
 import de.caritas.cob.userservice.api.service.agency.AgencyService;
@@ -24,9 +24,6 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class RegistrationUrlService {
 
-  /** Only URLs containing this domain may be used as a registration redirect. */
-  private static final String ALLOWED_REGISTRATION_DOMAIN = "caritas-onlineberatung.de";
-
   private final @NonNull AuthenticatedUser authenticatedUser;
   private final @NonNull ConsultantService consultantService;
   private final @NonNull AgencyService agencyService;
@@ -39,7 +36,7 @@ public class RegistrationUrlService {
     var consultant = getAuthenticatedConsultant();
     verifyAgencyMembership(consultant, agencyId);
     if (!isBlank(registrationUrl)) {
-      validateRegistrationUrl(registrationUrl);
+      RegistrationUrlValidator.validate(registrationUrl);
     }
     agencyService.setAgencyRegistrationUrl(
         agencyId, isBlank(registrationUrl) ? null : registrationUrl.trim(), consultant.getId());
@@ -68,14 +65,6 @@ public class RegistrationUrlService {
       throw new ForbiddenException(
           String.format(
               "Consultant with id %s is not assigned to agency %s", consultant.getId(), agencyId));
-    }
-  }
-
-  private void validateRegistrationUrl(String registrationUrl) {
-    if (!registrationUrl.toLowerCase().contains(ALLOWED_REGISTRATION_DOMAIN)) {
-      throw new BadRequestException(
-          String.format(
-              "Registration url must contain the domain %s", ALLOWED_REGISTRATION_DOMAIN));
     }
   }
 
