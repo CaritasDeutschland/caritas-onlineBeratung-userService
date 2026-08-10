@@ -84,4 +84,7 @@ public class UserDataResponseDTO {
   private Boolean available;
 
   private EmailNotificationsDTO emailNotifications;
+
+  /** personal registration redirect override of the consultant. */
+  private String registrationUrl;
 }
