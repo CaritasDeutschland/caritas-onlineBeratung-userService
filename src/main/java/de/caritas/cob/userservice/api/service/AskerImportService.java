@@ -462,7 +462,7 @@ public class AskerImportService {
             if (identityClient.userHasAuthority(
                     agency.getConsultant().getId(), AuthorityValue.VIEW_ALL_FEEDBACK_SESSIONS)
                 || agency.getConsultant().getId().equals(record.getConsultantId())) {
-              rocketChatService.addUserToGroup(
+              rocketChatService.addUserToGroupIgnoreRoomsThatDoNotExist(
                   agency.getConsultant().getRocketChatId(), rcFeedbackGroupId);
             }
           }
@@ -505,7 +505,7 @@ public class AskerImportService {
                 if (identityClient.userHasAuthority(
                         agency.getConsultant().getId(), AuthorityValue.VIEW_ALL_FEEDBACK_SESSIONS)
                     || agency.getConsultant().getId().equals(record.getConsultantId())) {
-                  rocketChatService.addUserToGroup(
+                  rocketChatService.addUserToGroupIgnoreRoomsThatDoNotExist(
                       agency.getConsultant().getRocketChatId(), rcGroupId);
                 }
               } else {
