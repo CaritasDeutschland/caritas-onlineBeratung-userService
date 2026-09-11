@@ -191,6 +191,11 @@ public class DeleteInactiveSessionsAndUserService {
           findSessionInUserSessionList(groupInfo.getGroupId(), userSessionList);
       if (session.isPresent()) {
         errors.addAll(deleteSessionService.performSessionDeletion(session.get()));
+      } else if (isFeedbackRoomOfSession(groupInfo.getGroupId())) {
+        log.warn(
+            "Skip deleting Rocket.Chat room {}: it is the feedback room of a session and is only "
+                + "deleted together with that session.",
+            groupInfo.getGroupId());
       } else {
         errors.addAll(
             deleteSessionService.performRocketchatSessionDeletion(groupInfo.getGroupId()));
@@ -223,6 +228,11 @@ public class DeleteInactiveSessionsAndUserService {
 
       if (session.isPresent()) {
         errors.addAll(deleteSessionService.performSessionDeletion(session.get()));
+      } else if (isFeedbackRoomOfSession(inactiveGroup.getGroupId())) {
+        log.warn(
+            "Skip deleting Rocket.Chat room {}: it is the feedback room of a session and is only "
+                + "deleted together with that session.",
+            inactiveGroup.getGroupId());
       } else {
         errors.addAll(
             deleteSessionService.performRocketchatSessionDeletion(inactiveGroup.getGroupId()));
@@ -244,6 +254,16 @@ public class DeleteInactiveSessionsAndUserService {
         .filter(Objects::nonNull)
         .max(Date::compareTo)
         .orElse(null);
+  }
+
+  /**
+   * A Rocket.Chat room that a session references as its feedback room must never be deleted on its
+   * own: the database reference would be left pointing at a room that no longer exists, which
+   * breaks de-archiving of that session (see CARITAS-1038). Feedback rooms are deleted together
+   * with their session in {@code DeleteRoomsAndSessionAction}.
+   */
+  private boolean isFeedbackRoomOfSession(String rcGroupId) {
+    return sessionRepository.findByFeedbackGroupId(rcGroupId).isPresent();
   }
 
   private Optional<Session> findSessionInUserSessionList(

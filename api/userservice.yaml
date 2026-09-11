@@ -2313,6 +2313,11 @@ components:
         - "MASTER_KEY_LOST"
         - "REASSIGN_CONSULTANT"
         - "REASSIGN_CONSULTANT_RESET_LAST_MESSAGE"
+        # Das Feature dahinter wurde reverted, aber die 1953 Nachrichten aus dem Zeitraum
+        # 12.03.2026 - 26.03.2026 liegen weiterhin in Rocket.Chat (1039 davon als lastMessage
+        # eines Raums). Fehlt der Wert hier, wirft AliasMessageConverter beim Deserialisieren,
+        # der Alias faellt weg und der Fehler flutet das Log. Nicht entfernen. Siehe CARITAS-1038.
+        - "CONSULTANT_DISPLAY_NAME_CHANGED"
 
     LastMessageDTO:
       type: object
