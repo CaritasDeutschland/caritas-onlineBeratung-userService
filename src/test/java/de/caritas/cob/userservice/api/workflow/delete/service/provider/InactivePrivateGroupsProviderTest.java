@@ -20,7 +20,9 @@ import de.caritas.cob.userservice.api.adapters.rocketchat.RocketChatService;
 import de.caritas.cob.userservice.api.adapters.rocketchat.dto.group.GroupDTO;
 import de.caritas.cob.userservice.api.exception.rocketchat.RocketChatGetGroupsListAllException;
 import de.caritas.cob.userservice.api.model.Chat;
+import de.caritas.cob.userservice.api.model.Session;
 import de.caritas.cob.userservice.api.port.out.ChatRepository;
+import de.caritas.cob.userservice.api.port.out.SessionRepository;
 import de.caritas.cob.userservice.api.service.LogService;
 import de.caritas.cob.userservice.api.workflow.delete.model.InactiveGroup;
 import java.time.LocalDateTime;
@@ -46,6 +48,7 @@ public class InactivePrivateGroupsProviderTest {
 
   @Mock private RocketChatService rocketChatService;
   @Mock private ChatRepository chatRepository;
+  @Mock private SessionRepository sessionRepository;
   @Mock private Logger logger;
 
   @Before
@@ -385,5 +388,35 @@ public class InactivePrivateGroupsProviderTest {
 
     // then
     assertThat(result.get(RC_USER_ID).get(0).getGroupId(), is(expectedGroupId));
+  }
+
+  @Test
+  public void
+      retrieveUserWithInactiveGroupInfoMap_Should_SkipGroup_WhenGroupIsFeedbackRoomOfSession()
+          throws RocketChatGetGroupsListAllException {
+    // given
+    EasyRandom easyRandom = new EasyRandom();
+    GroupDTO feedbackRoom = easyRandom.nextObject(GroupDTO.class);
+    feedbackRoom.getUser().setId(RC_USER_ID);
+    GroupDTO sessionRoom = easyRandom.nextObject(GroupDTO.class);
+    sessionRoom.getUser().setId(RC_USER_ID);
+
+    when(this.rocketChatService.fetchAllInactivePrivateGroupsSinceGivenDate(any()))
+        .thenReturn(asList(feedbackRoom, sessionRoom));
+    when(chatRepository.findAll()).thenReturn(IterableUtils.emptyIterable());
+
+    Session session = new Session();
+    session.setFeedbackGroupId(feedbackRoom.getId());
+    when(sessionRepository.findByFeedbackGroupIdIn(any())).thenReturn(asList(session));
+
+    // when
+    Map<String, List<InactiveGroup>> result =
+        inactivePrivateGroupsProvider.retrieveUserWithInactiveGroupInfoMap();
+
+    // then
+    List<InactiveGroup> inactiveGroups = result.get(RC_USER_ID);
+    assertThat(inactiveGroups, notNullValue());
+    assertThat(inactiveGroups.size(), is(1));
+    assertThat(inactiveGroups.get(0).getGroupId(), is(sessionRoom.getId()));
   }
 }

@@ -124,6 +124,15 @@ public interface SessionRepository extends CrudRepository<Session, Long> {
   List<Session> findByGroupOrFeedbackGroupIds(@Param(value = "group_ids") Set<String> groupIds);
 
   /**
+   * Find all {@link Session}s that use one of the given Rocket.Chat room ids as their feedback
+   * room. See CARITAS-1038.
+   *
+   * @param feedbackGroupIds the rocket chat feedback group ids
+   * @return a {@link List} of the matching sessions
+   */
+  List<Session> findByFeedbackGroupIdIn(Set<String> feedbackGroupIds);
+
+  /**
    * Find all {@link Session}s by an agency ID and SessionStatus where consultant is null.
    *
    * @param agencyId the id to search for

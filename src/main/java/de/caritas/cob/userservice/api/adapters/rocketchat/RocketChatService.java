@@ -105,6 +105,14 @@ public class RocketChatService implements MessageClient {
   private static final String ENDPOINT_GROUP_READ_ONLY = "/groups.setReadOnly";
   private static final String ENDPOINT_GROUP_KEY_UPDATE = "/e2e.updateGroupKey";
   private static final String ENDPOINT_GROUP_LIST = "/groups.listAll";
+
+  /**
+   * Number of groups requested from {@code groups.listAll}. Without an explicit count Rocket.Chat
+   * falls back to its {@code API_Default_Count} (50); the highest value a request may ask for is
+   * capped by {@code API_Upper_Count_Limit} (100). See CARITAS-1038.
+   */
+  private static final int GROUPS_LIST_ALL_COUNT = 100;
+
   private static final String ENDPOINT_ROOM_CLEAN_HISTORY = "/rooms.cleanHistory";
   private static final String ENDPOINT_ROOM_GET = "/rooms.get";
   private static final String ENDPOINT_ROOM_INFO = "/rooms.info?roomId=";
@@ -1221,7 +1229,10 @@ public class RocketChatService implements MessageClient {
       var technicalUser = rcCredentialHelper.getTechnicalUser();
       var header = getStandardHttpHeaders(technicalUser);
       HttpEntity<GroupAddUserBodyDTO> request = new HttpEntity<>(header);
-      var url = rocketChatConfig.getApiUrl(ENDPOINT_GROUP_LIST) + "?query={query}";
+      var url =
+          rocketChatConfig.getApiUrl(ENDPOINT_GROUP_LIST)
+              + "?query={query}&count="
+              + GROUPS_LIST_ALL_COUNT;
       response =
           restTemplate.exchange(
               url,

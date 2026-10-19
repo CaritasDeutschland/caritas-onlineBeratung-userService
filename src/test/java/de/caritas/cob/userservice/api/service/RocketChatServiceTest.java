@@ -26,6 +26,7 @@ import static de.caritas.cob.userservice.api.testHelper.TestConstants.USERNAME;
 import static de.caritas.cob.userservice.api.testHelper.TestConstants.USER_INFO_RESPONSE_DTO;
 import static de.caritas.cob.userservice.api.testHelper.TestConstants.USER_INFO_RESPONSE_DTO_FAILED;
 import static java.util.Objects.nonNull;
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.everyItem;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
@@ -1078,6 +1079,34 @@ public class RocketChatServiceTest {
     assertThat(result.size(), is(2));
     assertThat(result.contains(GROUP_DTO), is(true));
     assertThat(result.contains(GROUP_DTO_2), is(true));
+  }
+
+  @Test
+  public void
+      fetchAllInactivePrivateGroupsSinceGivenDate_Should_RequestMaximumCountAllowedByRocketChat()
+          throws RocketChatUserNotInitializedException, RocketChatGetGroupsListAllException {
+
+    when(rcCredentialsHelper.getTechnicalUser()).thenReturn(RC_CREDENTIALS_TECHNICAL_A);
+    when(restTemplate.exchange(
+            anyString(),
+            eq(HttpMethod.GET),
+            any(),
+            eq(GroupsListAllResponseDTO.class),
+            anyString()))
+        .thenReturn(new ResponseEntity<>(GROUPS_LIST_ALL_RESPONSE_DTO, HttpStatus.OK));
+
+    this.rocketChatService.fetchAllInactivePrivateGroupsSinceGivenDate(LocalDateTime.now());
+
+    ArgumentCaptor<String> urlCaptor = ArgumentCaptor.forClass(String.class);
+    verify(restTemplate, times(1))
+        .exchange(
+            urlCaptor.capture(),
+            eq(HttpMethod.GET),
+            any(),
+            eq(GroupsListAllResponseDTO.class),
+            anyString());
+    // without an explicit count Rocket.Chat falls back to API_Default_Count (50)
+    assertThat(urlCaptor.getValue(), containsString("count=100"));
   }
 
   @Test
