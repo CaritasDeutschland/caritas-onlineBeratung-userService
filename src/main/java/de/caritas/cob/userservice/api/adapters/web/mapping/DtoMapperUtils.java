@@ -36,7 +36,8 @@ public interface DtoMapperUtils {
         .name(agencyDTO.getName())
         .description(agencyDTO.getDescription())
         .teamAgency(agencyDTO.getTeamAgency())
-        .offline(agencyDTO.getOffline());
+        .offline(agencyDTO.getOffline())
+        .registrationUrl(agencyDTO.getRegistrationUrl());
   }
 
   default LanguageResponseDTO languageResponseDtoOf(Set<String> languageCodes) {
